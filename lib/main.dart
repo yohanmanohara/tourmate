@@ -2,7 +2,7 @@ import './screen/login.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../services/firebase_options.dart';
-
+import './layout.dart';
 void main () async {
   WidgetsFlutterBinding.ensureInitialized();
 await Firebase.initializeApp(
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home:  Login(), // Load the screen here
+      home:  SiteLayout(), // Load the screen here
     );
   }
 }
