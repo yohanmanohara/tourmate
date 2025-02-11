@@ -35,9 +35,9 @@ class Login extends StatelessWidget {
 
               Row(
                 children: [
-                  Image.asset('assets/company.png', height: 82),
+                  Image.asset('assets/logo.png', height: 82),
                   const SizedBox(width: 10),
-                  Text('Ceylon Luxury Bedding', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  Text('TourMate', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
                 ],
               ),
               // Image.asset('assets/company.png', height: 82),

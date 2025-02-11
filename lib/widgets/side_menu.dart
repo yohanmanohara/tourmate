@@ -23,19 +23,20 @@ class SideMenu extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(
-                      height: 40,
+                      height: 10,
                     ),
                     Row(
                       children: [
                         SizedBox(width: width / 48),
                         Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: Image.asset("assets/icons/logo.png"),
+                          padding: const EdgeInsets.only(right: 0),
+                          // child: Image.asset("assets/icons/logo.png", width: 200),
+
                         ),
                         const Flexible(
                           child: CustomText(
                             text: "TourMate",
-                            size: 20,
+                            size: 26,
                             weight: FontWeight.bold,
                             color: active,
                           ),
