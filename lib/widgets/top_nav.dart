@@ -6,6 +6,7 @@ import 'custom_text.dart';
 
 AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
     AppBar(
+      
       leading: !ResponsiveWidget.isSmallScreen(context)
           ? Row(
               children: [
@@ -37,7 +38,7 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
           IconButton(
               icon: const Icon(
                 Icons.settings,
-                color: dark,
+                color: Color.fromARGB(255, 255, 255, 255),
               ),
               onPressed: () {}),
           Stack(
@@ -45,7 +46,7 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
               IconButton(
                   icon: Icon(
                     Icons.notifications,
-                    color: dark.withOpacity(.7),
+                    color: const Color.fromARGB(255, 255, 255, 255).withOpacity(.7),
                   ),
                   onPressed: () {}),
               Positioned(
@@ -69,14 +70,14 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
             color: lightGrey,
           ),
           const SizedBox(
-            width: 24,
+            width: 19,
           ),
           const CustomText(
             text: "Yohan Manohara",
-            color: lightGrey,
+            color: Color.fromARGB(255, 255, 255, 255),
           ),
           const SizedBox(
-            width: 16,
+            width: 9,
           ),
           Container(
             decoration: BoxDecoration(
@@ -85,20 +86,21 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
             child: Container(
               decoration: BoxDecoration(
                   color: Colors.white, borderRadius: BorderRadius.circular(30)),
-              padding: const EdgeInsets.all(2),
+              padding: const EdgeInsets.all(1),
               margin: const EdgeInsets.all(2),
               child: const CircleAvatar(
                 backgroundColor: light,
                 child: Icon(
                   Icons.person_outline,
-                  color: dark,
+                  color: Color.fromARGB(255, 100, 99, 99),
                 ),
               ),
             ),
           )
         ],
       ),
-      iconTheme: const IconThemeData(color: dark),
+      iconTheme: const IconThemeData(color: Color.fromARGB(255, 255, 255, 255)),
       elevation: 0,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.blue,
+      
     );
