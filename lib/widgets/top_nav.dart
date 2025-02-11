@@ -6,7 +6,7 @@ import 'custom_text.dart';
 
 AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
     AppBar(
-
+      
       leading: !ResponsiveWidget.isSmallScreen(context)
           ? Row(
               children: [
@@ -38,9 +38,7 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
           IconButton(
               icon: const Icon(
                 Icons.settings,
-
                 color: Color.fromARGB(255, 255, 255, 255),
-
               ),
               onPressed: () {}),
           Stack(
@@ -48,9 +46,7 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
               IconButton(
                   icon: Icon(
                     Icons.notifications,
-
                     color: const Color.fromARGB(255, 255, 255, 255).withOpacity(.7),
-
                   ),
                   onPressed: () {}),
               Positioned(
@@ -73,7 +69,7 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
             height: 22,
             color: lightGrey,
           ),
-          
+          const SizedBox(
             width: 19,
           ),
           const CustomText(
@@ -82,7 +78,6 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
           ),
           const SizedBox(
             width: 9,
-
           ),
           Container(
             decoration: BoxDecoration(
@@ -91,15 +86,12 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
             child: Container(
               decoration: BoxDecoration(
                   color: Colors.white, borderRadius: BorderRadius.circular(30)),
-
               padding: const EdgeInsets.all(1),
-
               margin: const EdgeInsets.all(2),
               child: const CircleAvatar(
                 backgroundColor: light,
                 child: Icon(
                   Icons.person_outline,
-
                   color: Color.fromARGB(255, 100, 99, 99),
                 ),
               ),
@@ -110,5 +102,5 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
       iconTheme: const IconThemeData(color: Color.fromARGB(255, 255, 255, 255)),
       elevation: 0,
       backgroundColor: Colors.blue,
-
+      
     );
