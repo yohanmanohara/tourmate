@@ -4,13 +4,13 @@ const overviewPageDisplayName = "Overview";
 const overviewPageRoute = "/login";
 
 const driversPageDisplayName = "Drivers";
-const driversPageRoute = "/drivers";
+const driversPageRoute = "/overview";
 
 const clientsPageDisplayName = "Clients";
-const clientsPageRoute = "/clients";
+const clientsPageRoute = "/client";
 
 const authenticationPageDisplayName = "Log out";
-const authenticationPageRoute = "/auth";
+const authenticationPageRoute = "/aut";
 
 class MenuItem {
   final String name;
