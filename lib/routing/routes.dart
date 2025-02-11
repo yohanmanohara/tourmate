@@ -3,8 +3,8 @@ const rootRoute = "/";
 const overviewPageDisplayName = "Overview";
 const overviewPageRoute = "/login";
 
-const driversPageDisplayName = "Drivers";
-const driversPageRoute = "/overview";
+const driversPageDisplayName = "Camera";
+const driversPageRoute = "/camera";
 
 const clientsPageDisplayName = "Clients";
 const clientsPageRoute = "/client";

@@ -15,11 +15,17 @@ class HorizontalMenuItem extends StatelessWidget {
     double width = MediaQuery.of(context).size.width;
 
     return InkWell(
-                  onTap: onTap,
-                  onHover: (value){
-                    value ?
-                    menuController.onHover(itemName) : menuController.onHover("not hovering");
-                  },
+      onTap: () {
+        Scaffold.of(context).closeDrawer();  // Close the drawer
+        if (onTap != null) {
+          onTap!();  
+        }
+      },
+      onHover: (value) {
+        value
+            ? menuController.onHover(itemName)
+            : menuController.onHover("not hovering");
+      },
                   child: Obx(() => Container(
                     color: menuController.isHovering(itemName) ? lightGrey.withOpacity(.1) : Colors.transparent,
                     child: Row(
