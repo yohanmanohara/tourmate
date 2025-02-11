@@ -1,7 +1,7 @@
 const rootRoute = "/";
 
 const overviewPageDisplayName = "Overview";
-const overviewPageRoute = "/overview";
+const overviewPageRoute = "/login";
 
 const driversPageDisplayName = "Drivers";
 const driversPageRoute = "/drivers";

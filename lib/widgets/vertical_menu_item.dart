@@ -8,8 +8,7 @@ import '../widgets/custom_text.dart';
 class VertticalMenuItem extends StatelessWidget {
   final String itemName;
   final Function()? onTap;
-  const VertticalMenuItem({Key? key, required this.itemName, this.onTap})
-      : super(key: key);
+  const VertticalMenuItem({super.key, required this.itemName, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +22,7 @@ class VertticalMenuItem extends StatelessWidget {
         child: Obx(() => Container(
               color: menuController.isHovering(itemName)
                   ? lightGrey.withOpacity(.1)
-                  : Colors.transparent,
+                  : const Color.fromARGB(0, 207, 25, 25),
               child: Row(
                 children: [
                   Visibility(

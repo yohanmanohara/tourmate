@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_services.dart';
+import '../../services/auth_services.dart';
 class Login extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();

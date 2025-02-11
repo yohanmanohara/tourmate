@@ -1,6 +1,5 @@
 import 'package:mobileappdev/widgets/side_menu.dart';
 
-import './screen/login.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../services/firebase_options.dart';
@@ -26,12 +25,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Removes the debug banner
+      debugShowCheckedModeBanner: false, 
       title: 'Flutter App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home:  SideMenu(), // Load the screen here
+      home:  SiteLayout(), 
     );
   }
 }

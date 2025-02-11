@@ -8,7 +8,7 @@ import 'custom_text.dart';
 class HorizontalMenuItem extends StatelessWidget {
     final String itemName;
   final Function()? onTap;
-  const HorizontalMenuItem({ Key? key,required this.itemName, this.onTap }) : super(key: key);
+  const HorizontalMenuItem({ super.key,required this.itemName, this.onTap });
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class HorizontalMenuItem extends StatelessWidget {
                           child: Container(
                             width: 6,
                             height: 40,
-                            color: dark,
+                            color: const Color.fromARGB(255, 29, 47, 216),
                           ),
                         ),
                        SizedBox(width:width / 88),
