@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:mobileappdev/pages/authentication/login.dart';
 import '../../services/auth_services.dart';
-import 'signup.dart';
-class Login extends StatelessWidget {
+class Signup extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   
-  Login({super.key});
+  Signup({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -36,15 +37,17 @@ class Login extends StatelessWidget {
 
               Row(
                 children: [
-                  Image.asset('assets/icons/logo.png', height: 82),
+                  Image.asset('assets/icons/logo.png', height: 60),
                   const SizedBox(width: 10),
-                  Text('TourMate', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  Text('TourMate', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
                 ],
               ),
-            
+              // Image.asset('assets/company.png', height: 82),
+              // const SizedBox(width: 10),
+              // Text('Ceylon Luxury Bedding', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
               const SizedBox(height: 20),
               const Text(
-                'Welcome Back',
+                'Creayte an Account',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -93,7 +96,46 @@ class Login extends StatelessWidget {
                   contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 ),
               ),
+
+
+            const SizedBox(height: 10),
+TextFormField(
+  obscureText: true,
+  controller: _confirmPasswordController, // Use a separate controller
+  decoration: InputDecoration(
+    hintText: 'Confirm Password',
+    hintStyle: TextStyle(color: Colors.grey.shade600),
+    filled: true,
+    fillColor: Colors.grey.shade100,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: Colors.blue, width: 2),
+    ),
+    prefixIcon: Icon(Icons.lock_outline, color: Colors.grey.shade600),
+    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != _passwordController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
+  },
+),
+
+
+
               const SizedBox(height: 20),
+
+
+
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -112,7 +154,7 @@ class Login extends StatelessWidget {
                     );
                   },
                   child: const Text(
-                    'Login',
+                    'Sign Up',
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
@@ -139,41 +181,32 @@ class Login extends StatelessWidget {
                       Image.asset('assets/google.png', height: 24),
                       const SizedBox(width: 10),
                       const Text(
-                        'Sign in with Google',
+                        'Sign Up with Google',
                         style: TextStyle(fontSize: 16, color: Colors.black87),
                       ),
-
-
-
-
                     ],
-
-                      
-
-
                   ),
-                 
-                                  ),
+                ),
               ),
-
-  const SizedBox(height: 10),
+              
+              const SizedBox(height: 10),
 
         Row(
   mainAxisAlignment: MainAxisAlignment.center,
   children: [
     Text(
-      'Don\'t have an account?',
+      'Already have an account?',
       style: TextStyle(color: Colors.black87),
     ),
     GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => Signup()), // Replace with your actual screen
+          MaterialPageRoute(builder: (context) => Login()), // Replace with your actual screen
         );
       },
       child: Text(
-        ' Sign Up',
+        ' login',
         style: TextStyle(
           color: Colors.blue,
           fontWeight: FontWeight.bold,
@@ -183,17 +216,10 @@ class Login extends StatelessWidget {
   ],
 )
 
-
-              
             ],
           ),
-          
-        
         ),
-        
-        
       ),
-      
     );
   }
 }

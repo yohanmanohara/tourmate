@@ -1,12 +1,12 @@
-import 'package:mobileappdev/widgets/side_menu.dart';
+import 'package:mobileappdev/pages/authentication/login.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../services/firebase_options.dart';
-import './layout.dart';
 import '../controllers/menu_controller.dart' as menu_controller;
 import '../controllers/navigation_controller.dart';
 import 'package:get/get.dart';
-import 'routing/routes.dart';
+
 
 
 void main () async {
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home:  SiteLayout(), 
+      home:  Login(), 
     );
   }
 }
