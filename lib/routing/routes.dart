@@ -3,8 +3,8 @@ const rootRoute = "/";
 const overviewPageDisplayName = "Overview";
 const overviewPageRoute = "/login";
 
-const driversPageDisplayName = "Camera";
-const driversPageRoute = "/camera";
+const arPageDisplayName = "AR_Capture musium";
+const arPageRoute = "/AR";
 
 const clientsPageDisplayName = "Clients";
 const clientsPageRoute = "/client";
@@ -23,7 +23,7 @@ class MenuItem {
 
 List<MenuItem> sideMenuItemRoutes = [
  MenuItem(overviewPageDisplayName, overviewPageRoute),
- MenuItem(driversPageDisplayName, driversPageRoute),
+ MenuItem(arPageDisplayName, arPageRoute),
  MenuItem(clientsPageDisplayName, clientsPageRoute),
  MenuItem(authenticationPageDisplayName, authenticationPageRoute),
 ];
