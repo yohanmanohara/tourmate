@@ -3,8 +3,10 @@ const rootRoute = "/";
 const overviewPageDisplayName = "Overview";
 const overviewPageRoute = "/login";
 
+
 const arPageDisplayName = "AR_Capture musium";
 const arPageRoute = "/AR";
+
 
 const clientsPageDisplayName = "Clients";
 const clientsPageRoute = "/client";
