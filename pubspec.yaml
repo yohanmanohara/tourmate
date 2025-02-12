@@ -39,7 +39,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   get: ^4.6.5
   camera: ^0.11.1
-
+  ar_location_view: ^2.0.16
+  google_maps_flutter: ^2.5.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
