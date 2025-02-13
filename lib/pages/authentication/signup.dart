@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobileappdev/pages/authentication/login.dart';
 import '../../services/auth_services.dart';
+import '../../layout.dart';
 
 class Signup extends StatefulWidget {
   const Signup({Key? key}) : super(key: key);
@@ -11,9 +12,11 @@ class Signup extends StatefulWidget {
 
 class _SignupState extends State<Signup> {
   final TextEditingController _emailsignupController = TextEditingController();
-  final TextEditingController _passwordsignupController = TextEditingController();
-  final TextEditingController _confirmPasswordsignupController = TextEditingController();
-  bool _isLoading = false;  // Add _isLoading state
+  final TextEditingController _passwordsignupController =
+      TextEditingController();
+  final TextEditingController _confirmPasswordsignupController =
+      TextEditingController();
+  bool _isLoading = false; // Add _isLoading state
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +49,10 @@ class _SignupState extends State<Signup> {
                   const SizedBox(width: 10),
                   Text(
                     'TourMate',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87),
                   ),
                 ],
               ),
@@ -75,8 +81,10 @@ class _SignupState extends State<Signup> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.blue, width: 2),
                   ),
-                  prefixIcon: Icon(Icons.email_outlined, color: Colors.grey.shade600),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  prefixIcon:
+                      Icon(Icons.email_outlined, color: Colors.grey.shade600),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 ),
               ),
               const SizedBox(height: 10),
@@ -96,8 +104,10 @@ class _SignupState extends State<Signup> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.blue, width: 2),
                   ),
-                  prefixIcon: Icon(Icons.lock_outline, color: Colors.grey.shade600),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  prefixIcon:
+                      Icon(Icons.lock_outline, color: Colors.grey.shade600),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 ),
               ),
               const SizedBox(height: 10),
@@ -117,8 +127,10 @@ class _SignupState extends State<Signup> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.blue, width: 2),
                   ),
-                  prefixIcon: Icon(Icons.lock_outline, color: Colors.grey.shade600),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  prefixIcon:
+                      Icon(Icons.lock_outline, color: Colors.grey.shade600),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -141,39 +153,43 @@ class _SignupState extends State<Signup> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                 onPressed: _isLoading
-    ? null
-    : () async {
-        setState(() {
-          _isLoading = true; // Set loading state to true
-        });
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          setState(() {
+                            _isLoading = true; // Set loading state to true
+                          });
 
-        // Check if password and confirm password match
-        if (_passwordsignupController.text != _confirmPasswordsignupController.text) {
-          setState(() {
-            _isLoading = false; // Reset loading state
-          });
-          // Show error message if passwords don't match
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Passwords do not match')),
-          );
-          return;
-        }
+                          // Check if password and confirm password match
+                          if (_passwordsignupController.text !=
+                              _confirmPasswordsignupController.text) {
+                            setState(() {
+                              _isLoading = false; // Reset loading state
+                            });
+                            // Show error message if passwords don't match
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Passwords do not match')),
+                            );
+                            return;
+                          }
 
-        // Proceed with signup if passwords match
-        await AuthService().signup(
-          context: context,
-          email: _emailsignupController.text,
-          password: _passwordsignupController.text,
-        );
+                          // Proceed with signup if passwords match
+                          await AuthService().signup(
+                            context: context,
+                            email: _emailsignupController.text,
+                            password: _passwordsignupController.text,
+                          );
 
-        setState(() {
-          _isLoading = false; // Reset loading state after signup
-        });
-      },
-                       child: _isLoading
+                          setState(() {
+                            _isLoading =
+                                false; // Reset loading state after signup
+                          });
+                        },
+                  child: _isLoading
                       ? const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         )
                       : const Text(
                           'Signup',
@@ -193,8 +209,28 @@ class _SignupState extends State<Signup> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    // TODO: Implement Google Sign-In logic
+                  onPressed: () async {
+                    setState(() {
+                      _isLoading = true; // Show loading state
+                    });
+
+                    try {
+                      final user =
+                          await AuthService().signInWithGoogle(context);
+
+                      if (user != null) {
+                        // If sign in was successful, navigate to the main layout
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SiteLayout()),
+                        );
+                      }
+                    } finally {
+                      setState(() {
+                        _isLoading = false; // Hide loading state
+                      });
+                    }
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -222,7 +258,7 @@ class _SignupState extends State<Signup> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) =>  Login()),
+                        MaterialPageRoute(builder: (context) => Login()),
                       );
                     },
                     child: Text(
