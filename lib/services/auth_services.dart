@@ -62,11 +62,16 @@ Future<void> login({
     String idToken = (await userCredential.user!.getIdToken())!;
 
     print("Firebase ID Token: $idToken");
-    
-    // Store token in SharedPreferences
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('authToken', idToken);
+    // Get the current user
+     User? currentUser = FirebaseAuth.instance.currentUser;
 
+   if (currentUser != null) {
+    print("Current user: ${currentUser.email}");
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+   await prefs.setString('authToken', idToken);
+   }
+    
+    
     // Success toast
     toastification.show(
       context: context,
@@ -168,10 +173,15 @@ Future<void> login({
 
       print("Firebase ID Token: $idToken");
       
-      // Store token in SharedPreferences
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('authToken', idToken);
+     // Get the current user
+User? currentUser = FirebaseAuth.instance.currentUser;
 
+if (currentUser != null) {
+  print("Current user: ${currentUser.email}");
+  // You can store the token in SharedPreferences if needed
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('authToken', idToken);
+}
       // Success toast
       toastification.show(
         context: context,
