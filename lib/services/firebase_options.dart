@@ -41,49 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCWgAlhYfa4e3ihTDpZ5UGeZgkcro-HjHE',
-    appId: '1:499482163771:web:085097caf7e956926a3a1e',
-    messagingSenderId: '499482163771',
-    projectId: 'ceylon-luxury-bedding',
-    authDomain: 'ceylon-luxury-bedding.firebaseapp.com',
-    storageBucket: 'ceylon-luxury-bedding.firebasestorage.app',
-    measurementId: 'G-BF06B11EV7',
+    apiKey: 'AIzaSyD_HibCDqODil1BWKwQnBUd70Dp3osbjcY',
+    appId: '1:533172659048:web:b435961b6ef55dd6eaecdd',
+    messagingSenderId: '533172659048',
+    projectId: 'tourmate-6ce86',
+    authDomain: 'tourmate-6ce86.firebaseapp.com',
+    storageBucket: 'tourmate-6ce86.firebasestorage.app',
+    measurementId: 'G-LKF4H00KQK',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCm3W6oEi7DwaQSEtjig8ZrQJJG9c4VGFM',
-    appId: '1:499482163771:android:c2cf30bb99ef726f6a3a1e',
-    messagingSenderId: '499482163771',
-    projectId: 'ceylon-luxury-bedding',
-    storageBucket: 'ceylon-luxury-bedding.firebasestorage.app',
+    apiKey: 'AIzaSyDVQfn44J8Qmwa-VERl9D-2LppYiqtFLWE',
+    appId: '1:533172659048:android:b083213cafff86f2eaecdd',
+    messagingSenderId: '533172659048',
+    projectId: 'tourmate-6ce86',
+    storageBucket: 'tourmate-6ce86.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBJtuNp9LxKAOv8SW2Eiuqa87KMy6-Yu7Q',
-    appId: '1:499482163771:ios:fdbec6f3190d583b6a3a1e',
-    messagingSenderId: '499482163771',
-    projectId: 'ceylon-luxury-bedding',
-    storageBucket: 'ceylon-luxury-bedding.firebasestorage.app',
-    iosBundleId: 'com.example.expense',
+    apiKey: 'AIzaSyB5mr9ZR8eit5S6MtiQ738QEbG_ZbeYJPI',
+    appId: '1:533172659048:ios:7006222321da8d1aeaecdd',
+    messagingSenderId: '533172659048',
+    projectId: 'tourmate-6ce86',
+    storageBucket: 'tourmate-6ce86.firebasestorage.app',
+    iosBundleId: 'com.example.mobileappdev',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBJtuNp9LxKAOv8SW2Eiuqa87KMy6-Yu7Q',
-    appId: '1:499482163771:ios:fdbec6f3190d583b6a3a1e',
-    messagingSenderId: '499482163771',
-    projectId: 'ceylon-luxury-bedding',
-    storageBucket: 'ceylon-luxury-bedding.firebasestorage.app',
-    iosBundleId: 'com.example.expense',
+    apiKey: 'AIzaSyB5mr9ZR8eit5S6MtiQ738QEbG_ZbeYJPI',
+    appId: '1:533172659048:ios:7006222321da8d1aeaecdd',
+    messagingSenderId: '533172659048',
+    projectId: 'tourmate-6ce86',
+    storageBucket: 'tourmate-6ce86.firebasestorage.app',
+    iosBundleId: 'com.example.mobileappdev',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCWgAlhYfa4e3ihTDpZ5UGeZgkcro-HjHE',
-    appId: '1:499482163771:web:aca39c31a838207b6a3a1e',
-    messagingSenderId: '499482163771',
-    projectId: 'ceylon-luxury-bedding',
-    authDomain: 'ceylon-luxury-bedding.firebaseapp.com',
-    storageBucket: 'ceylon-luxury-bedding.firebasestorage.app',
-    measurementId: 'G-MEQ7HYJHDF',
+    apiKey: 'AIzaSyD_HibCDqODil1BWKwQnBUd70Dp3osbjcY',
+    appId: '1:533172659048:web:96f4968b3a4b8efeeaecdd',
+    messagingSenderId: '533172659048',
+    projectId: 'tourmate-6ce86',
+    authDomain: 'tourmate-6ce86.firebaseapp.com',
+    storageBucket: 'tourmate-6ce86.firebasestorage.app',
+    measurementId: 'G-H441QFK73D',
   );
 
 }
