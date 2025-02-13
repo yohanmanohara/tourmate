@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_services.dart';
 import 'signup.dart';
+import '../../layout.dart';
 
 class Login extends StatefulWidget {
   Login({super.key});
@@ -43,7 +44,11 @@ class _LoginState extends State<Login> {
                 children: [
                   Image.asset('assets/icons/logo.png', height: 82),
                   const SizedBox(width: 10),
-                  Text('TourMate', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  Text('TourMate',
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -71,8 +76,10 @@ class _LoginState extends State<Login> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.blue, width: 2),
                   ),
-                  prefixIcon: Icon(Icons.email_outlined, color: Colors.grey.shade600),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  prefixIcon:
+                      Icon(Icons.email_outlined, color: Colors.grey.shade600),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 ),
               ),
               const SizedBox(height: 10),
@@ -92,8 +99,10 @@ class _LoginState extends State<Login> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.blue, width: 2),
                   ),
-                  prefixIcon: Icon(Icons.lock_outline, color: Colors.grey.shade600),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  prefixIcon:
+                      Icon(Icons.lock_outline, color: Colors.grey.shade600),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 ),
               ),
               const SizedBox(height: 20),
@@ -107,24 +116,28 @@ class _LoginState extends State<Login> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: _isLoading ? null : () async {
-                    setState(() {
-                      _isLoading = true; // Set loading state to true
-                    });
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          setState(() {
+                            _isLoading = true; // Set loading state to true
+                          });
 
-                    await AuthService().login(
-                      context: context,
-                      email: _emailController.text,
-                      password: _passwordController.text,
-                    );
+                          await AuthService().login(
+                            context: context,
+                            email: _emailController.text,
+                            password: _passwordController.text,
+                          );
 
-                    setState(() {
-                      _isLoading = false; // Reset loading state after login
-                    });
-                  },
+                          setState(() {
+                            _isLoading =
+                                false; // Reset loading state after login
+                          });
+                        },
                   child: _isLoading
                       ? const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         )
                       : const Text(
                           'Login',
@@ -144,8 +157,28 @@ class _LoginState extends State<Login> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () {
-                    // TODO: Implement Google Sign-In logic
+                  onPressed: () async {
+                    setState(() {
+                      _isLoading = true; // Show loading state
+                    });
+
+                    try {
+                      final user =
+                          await AuthService().signInWithGoogle(context);
+
+                      if (user != null) {
+                        // If sign in was successful, navigate to the main layout
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SiteLayout()),
+                        );
+                      }
+                    } finally {
+                      setState(() {
+                        _isLoading = false; // Hide loading state
+                      });
+                    }
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -173,7 +206,9 @@ class _LoginState extends State<Login> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => Signup()), // Replace with your actual screen
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                Signup()), // Replace with your actual screen
                       );
                     },
                     child: Text(
