@@ -230,6 +230,7 @@ class AuthService {
 
       if (googleUser == null) {
         // User canceled the sign-in
+        print("Google sign-in canceled by user");
         toastification.show(
           context: context,
           title: const Text("Google sign-in was canceled."),
@@ -249,6 +250,7 @@ class AuthService {
           await googleUser.authentication;
 
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
+        print("Google Auth tokens are null");
         toastification.show(
           context: context,
           title: const Text("Google sign-in failed. Please try again."),
@@ -269,34 +271,53 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
-      final User? user = userCredential.user;
+      try {
+        final UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
+        final User? user = userCredential.user;
 
-      if (user != null) {
-        String idToken = (await user.getIdToken())!;
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('authToken', idToken);
+        if (user != null) {
+          String idToken = (await user.getIdToken())!;
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('authToken', idToken);
 
-        // Success toast
+          // Success toast
+          toastification.show(
+            context: context,
+            title: const Text("Google sign-in successful!"),
+            autoCloseDuration: const Duration(seconds: 2),
+            type: ToastificationType.success,
+            style: ToastificationStyle.fillColored,
+            alignment: Alignment.topCenter,
+            backgroundColor: const Color.fromARGB(137, 68, 194, 68),
+            foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+            primaryColor: const Color.fromARGB(255, 88, 223, 92),
+            borderRadius: BorderRadius.circular(20),
+          );
+
+          return user;
+        } else {
+          print("Firebase user is null after Google sign-in");
+          return null;
+        }
+      } catch (firebaseAuthException) {
+        print("Firebase sign-in with credential error: $firebaseAuthException");
         toastification.show(
           context: context,
-          title: const Text("Google sign-in successful!"),
+          title: Text("Firebase sign-in error: $firebaseAuthException"),
           autoCloseDuration: const Duration(seconds: 2),
-          type: ToastificationType.success,
+          type: ToastificationType.error,
           style: ToastificationStyle.fillColored,
           alignment: Alignment.topCenter,
-          backgroundColor: const Color.fromARGB(137, 68, 194, 68),
+          backgroundColor: const Color.fromARGB(137, 194, 68, 68),
           foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-          primaryColor: const Color.fromARGB(255, 88, 223, 92),
+          primaryColor: const Color.fromARGB(255, 235, 86, 86),
           borderRadius: BorderRadius.circular(20),
         );
-
-        return user;
-      } else {
         return null;
       }
     } catch (e) {
+      print("Google sign-in general error: $e");
       toastification.show(
         context: context,
         title: Text("Google sign-in error: $e"),
