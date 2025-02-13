@@ -49,13 +49,42 @@ class _AuthValidateState extends State<AuthValidate> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
-        child: isLoading
-            ? const CircularProgressIndicator()
-            : const Text('Checking authentication...'),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Logo Section
+              Image.asset(
+                'assets/icons/logo.png', // Replace with the path to your logo
+                height: 120,
+                width: 120,
+              ),
+              SizedBox(height: 20),
+              
+              // Loading Indicator or Text
+              isLoading
+                  ? const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue), // Optional: Custom color for the loader
+                    )
+                  : const Text(
+                      'Checking authentication...',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    ),
+            ],
+          ),
+        ),
       ),
     );
   }
