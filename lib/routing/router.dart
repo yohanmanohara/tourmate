@@ -17,10 +17,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case clientsPageRoute:
       return _getPageRoute(Ar_call());
 
-    case authenticationPageRoute:
-      logout();
-      return _getPageRoute(Login());
-      
+  
 
     default:
       return _getPageRoute(Ar_call());
@@ -31,12 +28,3 @@ PageRoute _getPageRoute(Widget child) {
   return MaterialPageRoute(builder: (context) => child);
 }
 
-Future<void> logout() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.remove('authToken'); // Clear token
-
-  // Navigate to the login page without requiring context
-  navigatorKey.currentState?.pushReplacement(
-    MaterialPageRoute(builder: (context) => Login()),
-  );
-}

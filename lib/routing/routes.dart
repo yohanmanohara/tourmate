@@ -11,8 +11,6 @@ const arPageRoute = "/AR";
 const clientsPageDisplayName = "Clients";
 const clientsPageRoute = "/client";
 
-const authenticationPageDisplayName = "Log out";
-const authenticationPageRoute = "/logout";
 
 class MenuItem {
   final String name;
@@ -27,5 +25,5 @@ List<MenuItem> sideMenuItemRoutes = [
  MenuItem(overviewPageDisplayName, overviewPageRoute),
  MenuItem(arPageDisplayName, arPageRoute),
  MenuItem(clientsPageDisplayName, clientsPageRoute),
- MenuItem(authenticationPageDisplayName, authenticationPageRoute),
+//  MenuItem(authenticationPageDisplayName, authenticationPageRoute),
 ];

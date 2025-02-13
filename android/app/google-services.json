@@ -1,32 +1,13 @@
 {
   "project_info": {
-    "project_number": "499482163771",
-    "project_id": "ceylon-luxury-bedding",
-    "storage_bucket": "ceylon-luxury-bedding.firebasestorage.app"
+    "project_number": "533172659048",
+    "project_id": "tourmate-6ce86",
+    "storage_bucket": "tourmate-6ce86.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:499482163771:android:c2cf30bb99ef726f6a3a1e",
-        "android_client_info": {
-          "package_name": "com.example.expense"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCm3W6oEi7DwaQSEtjig8ZrQJJG9c4VGFM"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:499482163771:android:bca3fd15545091286a3a1e",
+        "mobilesdk_app_id": "1:533172659048:android:b083213cafff86f2eaecdd",
         "android_client_info": {
           "package_name": "com.example.mobileappdev"
         }
@@ -34,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCm3W6oEi7DwaQSEtjig8ZrQJJG9c4VGFM"
+          "current_key": "AIzaSyDVQfn44J8Qmwa-VERl9D-2LppYiqtFLWE"
         }
       ],
       "services": {

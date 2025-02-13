@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import '../constants/style.dart';
 import '../helpers/responsiveness.dart';
+import '../pages/authentication/login.dart';
+import '../widgets/custom_text.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'custom_text.dart';
+// Global key for navigation
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
     AppBar(
-      
       leading: !ResponsiveWidget.isSmallScreen(context)
           ? Row(
               children: [
@@ -79,20 +82,53 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
           const SizedBox(
             width: 9,
           ),
-          Container(
-            decoration: BoxDecoration(
-                color: active.withOpacity(.5),
-                borderRadius: BorderRadius.circular(30)),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'logout') {
+                print("pressd logout");
+                logout(context); // Call logout function when logout is selected
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'profile',
+                child: Row(
+                  children: [
+                    Icon(Icons.person_outline, color: Colors.black),
+                    const SizedBox(width: 10),
+                    const Text('Profile'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.black),
+                    const SizedBox(width: 10),
+                    const Text('Logout'),
+                  ],
+                ),
+              ),
+            ],
             child: Container(
               decoration: BoxDecoration(
-                  color: Colors.white, borderRadius: BorderRadius.circular(30)),
-              padding: const EdgeInsets.all(1),
-              margin: const EdgeInsets.all(2),
-              child: const CircleAvatar(
-                backgroundColor: light,
-                child: Icon(
-                  Icons.person_outline,
-                  color: Color.fromARGB(255, 100, 99, 99),
+                color: active.withOpacity(.5),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white, 
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                padding: const EdgeInsets.all(1),
+                margin: const EdgeInsets.all(2),
+                child: const CircleAvatar(
+                  backgroundColor: light,
+                  child: Icon(
+                    Icons.person_outline,
+                    color: Color.fromARGB(255, 100, 99, 99),
+                  ),
                 ),
               ),
             ),
@@ -102,5 +138,17 @@ AppBar topNavigationBar(BuildContext context, GlobalKey<ScaffoldState> key) =>
       iconTheme: const IconThemeData(color: Color.fromARGB(255, 255, 255, 255)),
       elevation: 0,
       backgroundColor: Colors.blue,
-      
     );
+
+Future<void> logout(BuildContext context) async {
+  // Clear the token from shared preferences
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.remove('authToken'); // Clear token
+  print("cleared token");
+
+  // Redirect to Login screen
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => Login()), // Redirect to the login page
+  );
+}
