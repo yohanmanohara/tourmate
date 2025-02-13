@@ -1,8 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mobileappdev/layout.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter/material.dart';
 
@@ -59,6 +60,10 @@ Future<void> login({
     String idToken = (await userCredential.user!.getIdToken())!;
 
     print("Firebase ID Token: $idToken");
+    
+    // Store token in SharedPreferences
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('authToken', idToken);
 
     // Success toast
     toastification.show(
@@ -73,6 +78,15 @@ Future<void> login({
       primaryColor: const Color.fromARGB(255, 88, 223, 92),
       borderRadius: BorderRadius.circular(20),
     );
+
+    // Navigate to Dashboard after a delay (optional)
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => SiteLayout()), // Ensure DashboardScreen exists
+      );
+    });
+    
 
   } on FirebaseAuthException catch (e) {
     String message = "An error occurred";
