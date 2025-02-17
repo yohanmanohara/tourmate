@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import '../map/map.dart';
 
 class Overview extends StatelessWidget {
   const Overview({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder(
-      color: Colors.blue,
-      
-    );
+    return ARMapScreen(); // Display ARMapScreen
   }
 }
