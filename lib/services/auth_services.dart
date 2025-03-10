@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +5,7 @@ import 'package:mobileappdev/layout.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/services.dart';
 
 class AuthService {
   bool isValidEmail(String email) {
@@ -226,7 +225,14 @@ class AuthService {
   // google oauth
   Future<User?> signInWithGoogle(BuildContext context) async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn(
+        scopes: [
+          'email',
+          'https://www.googleapis.com/auth/userinfo.profile',
+        ],
+        clientId:
+            '', // Leave empty for Android - it uses the Google services JSON file
+      ).signIn();
 
       if (googleUser == null) {
         // User canceled the sign-in
@@ -318,9 +324,21 @@ class AuthService {
       }
     } catch (e) {
       print("Google sign-in general error: $e");
+
+      // More specific error handling
+      String errorMessage = "Google sign-in error";
+      if (e.toString().contains("ApiException: 10:")) {
+        errorMessage =
+            "Google Sign-In configuration error. Please check Firebase setup.";
+      } else if (e.toString().contains("network_error")) {
+        errorMessage = "Network error. Please check your internet connection.";
+      } else if (e is PlatformException) {
+        errorMessage = "Sign-in error: ${e.message}";
+      }
+
       toastification.show(
         context: context,
-        title: Text("Google sign-in error: $e"),
+        title: Text(errorMessage),
         autoCloseDuration: const Duration(seconds: 2),
         type: ToastificationType.error,
         style: ToastificationStyle.fillColored,
