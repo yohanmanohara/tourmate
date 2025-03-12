@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class ARMapScreen extends StatelessWidget {
-  ARMapScreen({Key? key}) : super(key: key);
+  ARMapScreen({super.key});
   final List<LatLng> arLocations = [
     LatLng(6.9271, 79.8612), // Colombo
     LatLng(7.2906, 80.6337), // Kandy

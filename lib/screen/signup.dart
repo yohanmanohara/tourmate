@@ -1,11 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import './login.dart';
 import '../../services/auth_services.dart';
-
+import 'main_layout.dart';
 class Signup extends StatefulWidget {
-  const Signup({Key? key}) : super(key: key);
+  const Signup({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SignupState createState() => _SignupState();
 }
 
@@ -217,14 +220,15 @@ class _SignupState extends State<Signup> {
                       final user =
                           await AuthService().signInWithGoogle(context);
 
-                      // if (user != null) {
-                      //   // If sign in was successful, navigate to the main layout
-                      //   Navigator.pushReplacement(
-                      //     context,
-                      //     MaterialPageRoute(
-                      //         builder: (context) => const SiteLayout()),
-                      //   );
-                      // }
+                      if (user != null) {
+                        // If sign in was successful, navigate to the main layout
+                        Navigator.pushReplacement(
+                        
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>  MainLayout()),
+                        );
+                      }
                     } finally {
                       setState(() {
                         _isLoading = false; // Hide loading state
