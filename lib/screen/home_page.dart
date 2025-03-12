@@ -5,6 +5,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -135,6 +136,7 @@ class HomePage extends StatelessWidget {
         const SizedBox(height: 5),
         Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
       ],
+
     );
   }
 }
