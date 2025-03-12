@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mobileappdev/layout.dart';
+import '../screen/main_layout.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -59,19 +59,19 @@ class AuthService {
 
       String idToken = (await userCredential.user!.getIdToken())!;
 
-      print("Firebase ID Token: $idToken");
+    
       // Get the current user
       User? currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser != null) {
-        print("Current user: ${currentUser.email}");
+       
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('authToken', idToken);
       }
 
       // Success toast
       toastification.show(
-        context: context,
+       
         title: const Text("Login successful!"),
         autoCloseDuration: const Duration(seconds: 2),
         type: ToastificationType.success,
@@ -86,10 +86,12 @@ class AuthService {
       // Navigate to Dashboard after a delay (optional)
       Future.delayed(const Duration(seconds: 1), () {
         Navigator.pushReplacement(
+         
+         
           context,
           MaterialPageRoute(
               builder: (context) =>
-                  SiteLayout()), // Ensure DashboardScreen exists
+                  MainLayout()), 
         );
       });
     } on FirebaseAuthException catch (e) {
@@ -102,6 +104,7 @@ class AuthService {
 
       // Error toast
       toastification.show(
+        // ignore: use_build_context_synchronously
         context: context,
         title: Text("Error code: ${e.code}, message: $message"),
         autoCloseDuration: const Duration(seconds: 2),
@@ -164,19 +167,19 @@ class AuthService {
 
       String idToken = (await userCredential.user!.getIdToken())!;
 
-      print("Firebase ID Token: $idToken");
-
+     
       // Get the current user
       User? currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser != null) {
-        print("Current user: ${currentUser.email}");
+        
         // You can store the token in SharedPreferences if needed
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('authToken', idToken);
       }
       // Success toast
       toastification.show(
+        // ignore: use_build_context_synchronously
         context: context,
         title: const Text("Signup successful!"),
         autoCloseDuration: const Duration(seconds: 2),
@@ -192,10 +195,11 @@ class AuthService {
       // Navigate to Dashboard after a delay
       Future.delayed(const Duration(seconds: 1), () {
         Navigator.pushReplacement(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(
               builder: (context) =>
-                  SiteLayout()), // Ensure DashboardScreen exists
+                  MainLayout()), // Ensure DashboardScreen exists
         );
       });
     } on FirebaseAuthException catch (e) {
@@ -208,6 +212,7 @@ class AuthService {
 
       // Error toast
       toastification.show(
+        // ignore: use_build_context_synchronously
         context: context,
         title: Text("Error code: ${e.code}, message: $message"),
         autoCloseDuration: const Duration(seconds: 2),
@@ -236,8 +241,9 @@ class AuthService {
 
       if (googleUser == null) {
         // User canceled the sign-in
-        print("Google sign-in canceled by user");
+      
         toastification.show(
+          // ignore: use_build_context_synchronously
           context: context,
           title: const Text("Google sign-in was canceled."),
           autoCloseDuration: const Duration(seconds: 2),
@@ -256,8 +262,9 @@ class AuthService {
           await googleUser.authentication;
 
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
-        print("Google Auth tokens are null");
+        
         toastification.show(
+          // ignore: use_build_context_synchronously
           context: context,
           title: const Text("Google sign-in failed. Please try again."),
           autoCloseDuration: const Duration(seconds: 2),
@@ -289,6 +296,7 @@ class AuthService {
 
           // Success toast
           toastification.show(
+            // ignore: use_build_context_synchronously
             context: context,
             title: const Text("Google sign-in successful!"),
             autoCloseDuration: const Duration(seconds: 2),
@@ -303,12 +311,13 @@ class AuthService {
 
           return user;
         } else {
-          print("Firebase user is null after Google sign-in");
+         
           return null;
         }
       } catch (firebaseAuthException) {
-        print("Firebase sign-in with credential error: $firebaseAuthException");
+       
         toastification.show(
+          // ignore: use_build_context_synchronously
           context: context,
           title: Text("Firebase sign-in error: $firebaseAuthException"),
           autoCloseDuration: const Duration(seconds: 2),
@@ -323,7 +332,7 @@ class AuthService {
         return null;
       }
     } catch (e) {
-      print("Google sign-in general error: $e");
+     
 
       // More specific error handling
       String errorMessage = "Google sign-in error";
@@ -337,6 +346,7 @@ class AuthService {
       }
 
       toastification.show(
+        // ignore: use_build_context_synchronously
         context: context,
         title: Text(errorMessage),
         autoCloseDuration: const Duration(seconds: 2),

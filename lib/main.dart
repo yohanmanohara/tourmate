@@ -1,26 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:get/get.dart';
-import 'package:mobileappdev/layout.dart';
-import 'package:mobileappdev/pages/authentication/login.dart';
+import './screen/onbording.dart';
 import '../services/firebase_options.dart';
-import '../controllers/menu_controller.dart' as menu_controller;
-import '../controllers/navigation_controller.dart';
+import '../screen/main_layout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
-  print("Main function started...");
   WidgetsFlutterBinding.ensureInitialized(); // Ensure initialization happens first.
 
   // Firebase initialization
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  print("Firebase initialized...");
 
-  // Initialize controllers
-  Get.put(menu_controller.MenuController());
-  Get.put(NavigationController());
 
   runApp(const MyApp());
 }
@@ -45,6 +37,7 @@ class AuthValidate extends StatefulWidget {
   const AuthValidate({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _AuthValidateState createState() => _AuthValidateState();
 }
 
@@ -54,18 +47,16 @@ class _AuthValidateState extends State<AuthValidate> {
   @override
   void initState() {
     super.initState();
-    print("initState running...");
     checkLoginStatus(); // Directly calling instead of addPostFrameCallback
   }
 
   // This function checks login status from SharedPreferences
   Future<void> checkLoginStatus() async {
     try {
-      print("checkLoginStatus started...");
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('authToken');
 
-      print("Auth Token: $token"); // Debugging  
+      // Debugging  
 
       await Future.delayed(const Duration(seconds: 2)); // Simulating loading  
 
@@ -75,18 +66,16 @@ class _AuthValidateState extends State<AuthValidate> {
         isLoading = false; // Stop loading once check is done
       });
 
-      print("Navigating to: ${token != null && token.isNotEmpty ? 'SiteLayout' : 'Login'}");
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => token != null && token.isNotEmpty 
-              ? const SiteLayout() // Navigate to the site layout if authenticated
-              :  Login(), // Otherwise, go to the login page
+              ? MainLayout() // Navigate to the site layout if authenticated
+              :  OnBoardingScreen(), // Otherwise, go to the login page
         ),
       );
     } catch (e) {
-      print("Error in checkLoginStatus: $e");
       setState(() {
         isLoading = false; // Stop loading even if there’s an error
       });
