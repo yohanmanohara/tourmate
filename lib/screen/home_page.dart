@@ -7,6 +7,19 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      appBar: AppBar(
+  title: const Text(
+    'TourMate',
+    style: TextStyle(
+      color: Colors.white, // Ensure text is visible
+      fontWeight: FontWeight.bold, // Makes the text bold
+      fontSize: 24.0,              // Makes the text larger
+    ),
+  ),
+  backgroundColor: Colors.indigoAccent,
+  elevation: 4,
+),
+
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

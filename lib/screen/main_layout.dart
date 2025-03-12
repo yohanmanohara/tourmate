@@ -25,7 +25,7 @@ class _MainLayoutState extends State<MainLayout> {
   ];
 
   final List<String> _titles = [
-    'Home',
+   '',
     'Map', 
     'AR Mode',
     'Profile',
