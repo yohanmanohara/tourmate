@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
-import 'package:mobileappdev/layout.dart';
-import 'package:mobileappdev/pages/authentication/login.dart';
+import './screen/onbording.dart';
 import '../services/firebase_options.dart';
-import '../controllers/menu_controller.dart' as menu_controller;
-import '../controllers/navigation_controller.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -18,9 +16,6 @@ void main() async {
   );
   print("Firebase initialized...");
 
-  // Initialize controllers
-  Get.put(menu_controller.MenuController());
-  Get.put(NavigationController());
 
   runApp(const MyApp());
 }
@@ -77,14 +72,14 @@ class _AuthValidateState extends State<AuthValidate> {
 
       print("Navigating to: ${token != null && token.isNotEmpty ? 'SiteLayout' : 'Login'}");
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => token != null && token.isNotEmpty 
-              ? const SiteLayout() // Navigate to the site layout if authenticated
-              :  Login(), // Otherwise, go to the login page
-        ),
-      );
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => token != null && token.isNotEmpty 
+      //         ? const SiteLayout() // Navigate to the site layout if authenticated
+      //         :  OnBoardingScreen(), // Otherwise, go to the login page
+      //   ),
+      // );
     } catch (e) {
       print("Error in checkLoginStatus: $e");
       setState(() {

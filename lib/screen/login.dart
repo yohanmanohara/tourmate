@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:mobileappdev/pages/authentication/login.dart';
 import '../../services/auth_services.dart';
-import '../../layout.dart';
+import 'signup.dart';
 
-class Signup extends StatefulWidget {
-  const Signup({Key? key}) : super(key: key);
+class Login extends StatefulWidget {
+  Login({super.key});
 
   @override
-  _SignupState createState() => _SignupState();
+  _LoginState createState() => _LoginState();
 }
 
-class _SignupState extends State<Signup> {
-  final TextEditingController _emailsignupController = TextEditingController();
-  final TextEditingController _passwordsignupController =
-      TextEditingController();
-  final TextEditingController _confirmPasswordsignupController =
-      TextEditingController();
-  bool _isLoading = false; // Add _isLoading state
+class _LoginState extends State<Login> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false; // Track loading state
 
   @override
   Widget build(BuildContext context) {
@@ -45,20 +41,18 @@ class _SignupState extends State<Signup> {
             children: [
               Row(
                 children: [
-                  Image.asset('assets/icons/logo.png', height: 60),
+                  Image.asset('assets/icons/logo.png', height: 82),
                   const SizedBox(width: 10),
-                  Text(
-                    'TourMate',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87),
-                  ),
+                  Text('TourMate',
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87)),
                 ],
               ),
               const SizedBox(height: 20),
               const Text(
-                'Create an Account',
+                'Welcome Back',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -67,7 +61,7 @@ class _SignupState extends State<Signup> {
               ),
               const SizedBox(height: 10),
               TextFormField(
-                controller: _emailsignupController,
+                controller: _emailController,
                 decoration: InputDecoration(
                   hintText: 'Email',
                   hintStyle: TextStyle(color: Colors.grey.shade600),
@@ -90,7 +84,7 @@ class _SignupState extends State<Signup> {
               const SizedBox(height: 10),
               TextFormField(
                 obscureText: true,
-                controller: _passwordsignupController,
+                controller: _passwordController,
                 decoration: InputDecoration(
                   hintText: 'Password',
                   hintStyle: TextStyle(color: Colors.grey.shade600),
@@ -110,38 +104,6 @@ class _SignupState extends State<Signup> {
                       const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 ),
               ),
-              const SizedBox(height: 10),
-              TextFormField(
-                obscureText: true,
-                controller: _confirmPasswordsignupController,
-                decoration: InputDecoration(
-                  hintText: 'Confirm Password',
-                  hintStyle: TextStyle(color: Colors.grey.shade600),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  prefixIcon:
-                      Icon(Icons.lock_outline, color: Colors.grey.shade600),
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
-                  }
-                  if (value != _passwordsignupController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -160,30 +122,15 @@ class _SignupState extends State<Signup> {
                             _isLoading = true; // Set loading state to true
                           });
 
-                          // Check if password and confirm password match
-                          if (_passwordsignupController.text !=
-                              _confirmPasswordsignupController.text) {
-                            setState(() {
-                              _isLoading = false; // Reset loading state
-                            });
-                            // Show error message if passwords don't match
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Passwords do not match')),
-                            );
-                            return;
-                          }
-
-                          // Proceed with signup if passwords match
-                          await AuthService().signup(
+                          await AuthService().login(
                             context: context,
-                            email: _emailsignupController.text,
-                            password: _passwordsignupController.text,
+                            email: _emailController.text,
+                            password: _passwordController.text,
                           );
 
                           setState(() {
                             _isLoading =
-                                false; // Reset loading state after signup
+                                false; // Reset loading state after login
                           });
                         },
                   child: _isLoading
@@ -192,12 +139,12 @@ class _SignupState extends State<Signup> {
                               AlwaysStoppedAnimation<Color>(Colors.white),
                         )
                       : const Text(
-                          'Signup',
+                          'Login',
                           style: TextStyle(fontSize: 16, color: Colors.white),
                         ),
                 ),
               ),
-              const SizedBox(height: 9),
+              const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -218,14 +165,14 @@ class _SignupState extends State<Signup> {
                       final user =
                           await AuthService().signInWithGoogle(context);
 
-                      if (user != null) {
-                        // If sign in was successful, navigate to the main layout
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const SiteLayout()),
-                        );
-                      }
+                      // if (user != null) {
+                      //   // If sign in was successful, navigate to the main layout
+                      //   Navigator.pushReplacement(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //         builder: (context) => const SiteLayout()),
+                      //   );
+                      // }
                     } finally {
                       setState(() {
                         _isLoading = false; // Hide loading state
@@ -239,7 +186,7 @@ class _SignupState extends State<Signup> {
                       Image.asset('assets/google.png', height: 24),
                       const SizedBox(width: 10),
                       const Text(
-                        'Sign Up with Google',
+                        'Sign in with Google',
                         style: TextStyle(fontSize: 16, color: Colors.black87),
                       ),
                     ],
@@ -251,18 +198,20 @@ class _SignupState extends State<Signup> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Already have an account?',
+                    'Don\'t have an account?',
                     style: TextStyle(color: Colors.black87),
                   ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => Login()),
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                Signup()), // Replace with your actual screen
                       );
                     },
                     child: Text(
-                      ' Login',
+                      ' Sign Up',
                       style: TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.bold,
