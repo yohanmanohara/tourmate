@@ -3,7 +3,8 @@ import 'home_page.dart';
 import 'profile_page.dart';
 import 'settings_page.dart';
 import '../widgets/appbar.dart';
-
+import 'map.dart';
+// import 'camera_page.dart';
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
@@ -17,12 +18,16 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _screens = [
     HomePage(),
+    ARMapScreen(),
+    // CameraPage(),
     ProfilePage(),
     SettingsPage(),
   ];
 
   final List<String> _titles = [
     'Home',
+    'Map', 
+    'Camera',
     'Profile',
     'Settings',
   ];
@@ -30,7 +35,6 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Custom AppBar
       appBar: BeautifulAppBar(
         currentIndex: _currentIndex,
         titles: _titles,
@@ -41,7 +45,6 @@ class _MainLayoutState extends State<MainLayout> {
         child: _screens[_currentIndex],
       ),
 
-      // Bottom Navigation Bar with Custom Camera Button
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -49,11 +52,11 @@ class _MainLayoutState extends State<MainLayout> {
             _currentIndex = index;
           });
         },
-        selectedItemColor: Colors.deepPurpleAccent, // Selected item color
-        unselectedItemColor: Colors.grey, // Unselected item color
-        backgroundColor: Colors.white, // Background color
-        type: BottomNavigationBarType.fixed, // Fixed type for a modern look
-        elevation: 20, // Increased elevation for a stronger shadow
+        selectedItemColor: Colors.deepPurpleAccent,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        elevation: 20,
         selectedLabelStyle: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -63,12 +66,12 @@ class _MainLayoutState extends State<MainLayout> {
           fontWeight: FontWeight.w500,
         ),
         selectedIconTheme: IconThemeData(
-          size: 28, // Larger size for selected icons
-          color: Colors.deepPurpleAccent, // Selected icon color
+          size: 28,
+          color: Colors.deepPurpleAccent,
         ),
         unselectedIconTheme: IconThemeData(
-          size: 24, // Smaller size for unselected icons
-          color: Colors.grey, // Unselected icon color
+          size: 24,
+          color: Colors.grey,
         ),
         items: [
           BottomNavigationBarItem(
@@ -77,21 +80,20 @@ class _MainLayoutState extends State<MainLayout> {
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: "Home",
+            icon: Icon(Icons.map_outlined),
+            activeIcon: Icon(Icons.map),
+            label: "Map",
           ),
-          // Custom Camera Button with Blue Background and Rounded Edges
           BottomNavigationBarItem(
             icon: Container(
               decoration: BoxDecoration(
-                color: Colors.blue, // Blue background for Camera button
-                shape: BoxShape.circle, // Rounded shape
+                color: Colors.indigo,
+                shape: BoxShape.circle,
               ),
-              padding: EdgeInsets.all(12.0), // Padding to control the size
+              padding: EdgeInsets.all(12.0),
               child: Icon(
                 Icons.camera_alt_outlined,
-                color: Colors.white, // White icon for contrast
+                color: Colors.white,
               ),
             ),
             label: "Camera",
