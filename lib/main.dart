@@ -4,15 +4,16 @@ import './screen/onbording.dart';
 import '../services/firebase_options.dart';
 import '../screen/main_layout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../screen/admin/admin_dashboard.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensure initialization happens first.
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Ensure initialization happens first.
 
   // Firebase initialization
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
 
   runApp(const MyApp());
 }
@@ -56,23 +57,22 @@ class _AuthValidateState extends State<AuthValidate> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('authToken');
 
-      // Debugging  
+      // Debugging
 
-      await Future.delayed(const Duration(seconds: 2)); // Simulating loading  
+      await Future.delayed(const Duration(seconds: 2)); // Simulating loading
 
-      if (!mounted) return;  
+      if (!mounted) return;
 
       setState(() {
         isLoading = false; // Stop loading once check is done
       });
 
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => token != null && token.isNotEmpty 
-              ? MainLayout() // Navigate to the site layout if authenticated
-              :  OnBoardingScreen(), // Otherwise, go to the login page
+          builder: (context) => token != null && token.isNotEmpty
+              ? AdminDashboardScreen() // Navigate to the site layout if authenticated
+              : OnBoardingScreen(), // Otherwise, go to the login page
         ),
       );
     } catch (e) {

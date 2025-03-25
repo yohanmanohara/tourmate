@@ -18,8 +18,10 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    print("Login started for email: $email");
     try {
       if (email.isEmpty || password.isEmpty) {
+        print("Email or password empty");
         toastification.show(
           context: context,
           title: const Text('Email and password cannot be empty'),
@@ -36,6 +38,7 @@ class AuthService {
       }
 
       if (!isValidEmail(email)) {
+        print("Invalid email format");
         toastification.show(
           context: context,
           title: const Text('Please enter a valid email address'),
@@ -51,27 +54,29 @@ class AuthService {
         return;
       }
 
+      print("Attempting to sign in with Firebase");
       final userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
+      print("User signed in successfully");
       String idToken = (await userCredential.user!.getIdToken())!;
 
-    
+      print("ID Token retrieved: $idToken");
       // Get the current user
       User? currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser != null) {
-       
+        print("Current user: ${currentUser.email}");
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('authToken', idToken);
+        print("Auth token saved to SharedPreferences");
       }
 
       // Success toast
       toastification.show(
-       
         title: const Text("Login successful!"),
         autoCloseDuration: const Duration(seconds: 2),
         type: ToastificationType.success,
@@ -85,13 +90,10 @@ class AuthService {
 
       // Navigate to Dashboard after a delay (optional)
       Future.delayed(const Duration(seconds: 1), () {
+        print("Navigating to MainLayout");
         Navigator.pushReplacement(
-         
-         
           context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  MainLayout()), 
+          MaterialPageRoute(builder: (context) => MainLayout()),
         );
       });
     } on FirebaseAuthException catch (e) {
@@ -116,7 +118,12 @@ class AuthService {
         primaryColor: const Color.fromARGB(255, 235, 86, 86),
         borderRadius: BorderRadius.circular(20),
       );
+      print(
+          "Firebase Auth Exception: ${e.code} - ${e.message}"); // Add this line
+    } catch (e) {
+      print("An unexpected error occurred: $e"); // Add this line
     }
+    print("Login process completed");
   }
 
   // Signup function
@@ -167,12 +174,10 @@ class AuthService {
 
       String idToken = (await userCredential.user!.getIdToken())!;
 
-     
       // Get the current user
       User? currentUser = FirebaseAuth.instance.currentUser;
 
       if (currentUser != null) {
-        
         // You can store the token in SharedPreferences if needed
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('authToken', idToken);
@@ -241,7 +246,7 @@ class AuthService {
 
       if (googleUser == null) {
         // User canceled the sign-in
-      
+
         toastification.show(
           // ignore: use_build_context_synchronously
           context: context,
@@ -262,7 +267,6 @@ class AuthService {
           await googleUser.authentication;
 
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
-        
         toastification.show(
           // ignore: use_build_context_synchronously
           context: context,
@@ -311,11 +315,9 @@ class AuthService {
 
           return user;
         } else {
-         
           return null;
         }
       } catch (firebaseAuthException) {
-       
         toastification.show(
           // ignore: use_build_context_synchronously
           context: context,
@@ -332,8 +334,6 @@ class AuthService {
         return null;
       }
     } catch (e) {
-     
-
       // More specific error handling
       String errorMessage = "Google sign-in error";
       if (e.toString().contains("ApiException: 10:")) {
