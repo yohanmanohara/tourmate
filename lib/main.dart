@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import './screen/onbording.dart';
 import '../services/firebase_options.dart';
-import '../screen/main_layout.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../screen/admin/admin_dashboard.dart';
+import './screen/home_page.dart';
+import './screen/admin/admin_dashboard.dart';
+import './services/auth_services.dart';
+import './screen/login.dart';
+import './screen/signup.dart';
 
 void main() async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Ensure initialization happens first.
-
-  // Firebase initialization
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
   runApp(const MyApp());
 }
 
@@ -24,12 +22,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Removes the debug banner
+      debugShowCheckedModeBanner: false,
       title: 'TourMate',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const AuthValidate(), // Custom widget for authentication
+      home: const AuthValidate(),
+      routes: {
+        '/login': (context) => const Login(),
+        '/signup': (context) => const Signup(),
+        '/home': (context) => const HomePage(),
+        '/admin-dashboard': (context) => const AdminDashboardScreen(),
+        // Add other routes as needed
+      },
     );
   }
 }
@@ -38,66 +43,84 @@ class AuthValidate extends StatefulWidget {
   const AuthValidate({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _AuthValidateState createState() => _AuthValidateState();
 }
 
 class _AuthValidateState extends State<AuthValidate> {
-  bool isLoading = true; // Track loading state
+  bool isLoading = true;
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
-    checkLoginStatus(); // Directly calling instead of addPostFrameCallback
+    checkLoginStatus();
   }
 
-  // This function checks login status from SharedPreferences
   Future<void> checkLoginStatus() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('authToken');
+      // Simulate loading time
+      await Future.delayed(const Duration(seconds: 1));
 
-      // Debugging
-
-      await Future.delayed(const Duration(seconds: 2)); // Simulating loading
+      // Check user authentication status and role
+      final userStatus = await _authService.getCurrentUserRole();
 
       if (!mounted) return;
 
       setState(() {
-        isLoading = false; // Stop loading once check is done
+        isLoading = false;
       });
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => token != null && token.isNotEmpty
-              ? AdminDashboardScreen() // Navigate to the site layout if authenticated
-              : OnBoardingScreen(), // Otherwise, go to the login page
-        ),
-      );
+      if (userStatus['isLoggedIn']) {
+        if (userStatus['role'] == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const AdminDashboardScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        }
+      } else {
+        // Not logged in, show onboarding
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnBoardingScreen()),
+        );
+      }
     } catch (e) {
       setState(() {
-        isLoading = false; // Stop loading even if there’s an error
+        isLoading = false;
       });
+
+      // On error, redirect to onboarding/login
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnBoardingScreen()),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set background color
+      backgroundColor: Colors.white,
       body: Center(
         child: isLoading
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/icons/logo.png', // Replace with the path to your logo
+                    'assets/icons/logo.png',
                     height: 120,
                     width: 120,
                   ),
                   const SizedBox(height: 20),
-                  const CircularProgressIndicator(), // Loading spinner
+                  const CircularProgressIndicator(),
                 ],
               )
             : const Text(

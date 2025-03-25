@@ -6,11 +6,63 @@ import 'package:toastification/toastification.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/services.dart';
+import '../screen/home_page.dart';
+import '../screen/admin/admin_dashboard.dart';
+import 'firestore_service.dart';
+import '../models/user_model.dart';
 
 class AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirestoreService _firestoreService = FirestoreService();
+
   bool isValidEmail(String email) {
     final regex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$');
     return regex.hasMatch(email);
+  }
+
+  // Store user session data
+  Future<void> _storeUserSession(User user, String role) async {
+    String idToken = await user.getIdToken() ?? '';
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('authToken', idToken);
+    await prefs.setString('uid', user.uid);
+    await prefs.setString('email', user.email ?? '');
+    await prefs.setString('role', role);
+  }
+
+  // Clear user session data on logout
+  Future<void> _clearUserSession() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
+
+  // Navigate based on role
+  void _navigateBasedOnRole(BuildContext context, String role) {
+    if (role == 'admin') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    }
+  }
+
+  // Check if a user exists in Firestore, if not, create a new entry
+  Future<String> _ensureUserExists(User user) async {
+    UserModel? userData = await _firestoreService.getUserData(user.uid);
+
+    if (userData == null) {
+      // New user - create entry with default 'user' role
+      await _firestoreService.createNewUser(user.uid, user.email ?? '');
+      return 'user';
+    }
+
+    return userData.role;
   }
 
   Future<void> login({
@@ -359,6 +411,110 @@ class AuthService {
         borderRadius: BorderRadius.circular(20),
       );
       return null;
+    }
+  }
+
+  // Sign out
+  Future<void> signOut(BuildContext context) async {
+    try {
+      await _auth.signOut();
+      await GoogleSignIn().signOut();
+      await _clearUserSession();
+
+      // Navigate to login screen
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    } catch (e) {
+      toastification.show(
+        context: context,
+        title: Text("Error signing out: $e"),
+        autoCloseDuration: const Duration(seconds: 2),
+        type: ToastificationType.error,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        backgroundColor: const Color.fromARGB(137, 194, 68, 68),
+        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+        primaryColor: const Color.fromARGB(255, 235, 86, 86),
+        borderRadius: BorderRadius.circular(20),
+      );
+    }
+  }
+
+  // Check if user is logged in and return their role
+  Future<Map<String, dynamic>> getCurrentUserRole() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? uid = prefs.getString('uid');
+      String? role = prefs.getString('role');
+
+      if (uid != null && role != null) {
+        return {
+          'isLoggedIn': true,
+          'role': role,
+          'uid': uid,
+        };
+      }
+
+      // Check Firebase auth state as fallback
+      User? user = _auth.currentUser;
+      if (user != null) {
+        UserModel? userData = await _firestoreService.getUserData(user.uid);
+        if (userData != null) {
+          // Update shared preferences
+          await _storeUserSession(user, userData.role);
+          return {
+            'isLoggedIn': true,
+            'role': userData.role,
+            'uid': user.uid,
+          };
+        }
+      }
+
+      return {
+        'isLoggedIn': false,
+        'role': null,
+        'uid': null,
+      };
+    } catch (e) {
+      print('Error checking user role: $e');
+      return {
+        'isLoggedIn': false,
+        'role': null,
+        'uid': null,
+      };
+    }
+  }
+
+  // Store user session data
+  Future<void> storeUserSession(User user, String role) async {
+    try {
+      String idToken = await user.getIdToken() ?? '';
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('authToken', idToken);
+      await prefs.setString('uid', user.uid);
+      await prefs.setString('email', user.email ?? '');
+      await prefs.setString('role', role);
+      await prefs.setString('displayName', user.displayName ?? '');
+      await prefs.setString('photoURL', user.photoURL ?? '');
+    } catch (e) {
+      print('Error storing user session: $e');
+      rethrow;
+    }
+  }
+
+  // Create user with email and password
+  Future<UserCredential?> createUserWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      return await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      print('Error creating user with email and password: $e');
+      rethrow;
     }
   }
 }

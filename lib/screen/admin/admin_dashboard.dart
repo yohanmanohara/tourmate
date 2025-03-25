@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_services.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -34,6 +35,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
         backgroundColor: Colors.indigoAccent,
         elevation: 4,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none, color: Colors.white),
+            onPressed: () {
+              // Show notifications
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              await AuthService().signOut(context);
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
