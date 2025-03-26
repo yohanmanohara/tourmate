@@ -3,14 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dots_indicator/dots_indicator.dart';
-import '../screen/login.dart'; 
+import '../screen/login.dart';
 
-  // Image Paths
-  class ImagesPath {
-    static String kOnboarding1 = 'assets/images/onBoarding1.png';
-    static String kOnboarding2 = 'assets/images/onBoarding2.png';
-    static String kOnboarding3 = 'assets/images/onBoarding3.png';
-  }
+// Image Paths
+class ImagesPath {
+  static String kOnboarding1 = 'assets/images/onBoarding1.jpg';
+  static String kOnboarding2 = 'assets/images/onBoarding2.jpg';
+  static String kOnboarding3 = 'assets/images/onBoarding3.jpg';
+}
 
 // Colors
 class AppColor {
@@ -49,10 +49,8 @@ List<OnBoarding> onBoardinglist = [
   OnBoarding(
       title: "Experience the Premium Features wit App",
       image: ImagesPath.kOnboarding3,
-      description:
-          'Updated TalkGpt with premium materials anfective learning'),
+      description: 'Updated TalkGpt with premium materials anfective learning'),
 ];
-
 
 // Onboarding Screen
 class OnBoardingScreen extends StatefulWidget {
@@ -103,8 +101,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                   );
                 }),
           ),
-
-          
           const SizedBox(height: 40),
           Center(
             child: DotsIndicator(
@@ -140,39 +136,39 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                   );
                 }),
           ),
-          
           const SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.only(left: 25, right: 23, bottom: 36),
-            child: PrimaryButton(
+            Padding(
+            padding: const EdgeInsets.only(bottom: 36),
+            child: Center(
+              child: PrimaryButton(
               elevation: 0,
               onTap: () {
-  if (_currentIndex == onBoardinglist.length - 1) {
-    // Handle onboarding completion
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => Login()),
-    ); // <- Missing parenthesis added here
-  } else {
-    _pageController1.nextPage(
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.fastOutSlowIn,
-    );
-    _pageController2.nextPage(
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.fastOutSlowIn,
-    );
-  }
-},
-
+                if (_currentIndex == onBoardinglist.length - 1) {
+                // Handle onboarding completion
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => Login()),
+                );
+                } else {
+                _pageController1.nextPage(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.fastOutSlowIn,
+                );
+                _pageController2.nextPage(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.fastOutSlowIn,
+                );
+                }
+              },
               text: _currentIndex == onBoardinglist.length - 1
-                  ? 'Get Started'
-                  : 'Next',
+                ? 'Get Started'
+                : 'Next',
               bgColor: AppColor.kPrimary,
               borderRadius: 20,
               height: 46,
               width: 327,
               textColor: AppColor.kWhite,
+              ),
             ),
           ),
         ],
@@ -211,12 +207,11 @@ class OnboardingTextCard extends StatelessWidget {
           Text(
             onBoardingModel.title,
             textAlign: TextAlign.center,
-           style: GoogleFonts.plusJakartaSans(
-            fontSize: 24, 
-          fontWeight: FontWeight.bold,
-           color: AppColor.kGrayscaleDark100,
-         ),
-
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppColor.kGrayscaleDark100,
+            ),
           ),
           const SizedBox(height: 16),
           Text(

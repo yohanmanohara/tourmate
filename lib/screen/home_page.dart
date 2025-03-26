@@ -1,25 +1,32 @@
 import 'package:flutter/material.dart';
+import '../services/auth_services.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
-  title: const Text(
-    'TourMate',
-    style: TextStyle(
-      color: Colors.white, // Ensure text is visible
-      fontWeight: FontWeight.bold, // Makes the text bold
-      fontSize: 24.0,              // Makes the text larger
-    ),
-  ),
-  backgroundColor: Colors.indigoAccent,
-  elevation: 4,
-),
-
+        title: const Text(
+          'TourMate',
+          style: TextStyle(
+            color: Colors.white, // Ensure text is visible
+            fontWeight: FontWeight.bold, // Makes the text bold
+            fontSize: 24.0, // Makes the text larger
+          ),
+        ),
+        backgroundColor: Colors.indigoAccent,
+        elevation: 4,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await AuthService().signOut(context);
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -54,7 +61,8 @@ class HomePage extends StatelessWidget {
                       destinationCard('Ancient Ruins', 'assets/ruins.jpg'),
                       destinationCard('City Tour', 'assets/city.jpg'),
                       destinationCard('Mountain View', 'assets/mountain.jpg'),
-                      destinationCard('Cultural Heritage', 'assets/culture.jpg'),
+                      destinationCard(
+                          'Cultural Heritage', 'assets/culture.jpg'),
                     ],
                   ),
                 ),
@@ -93,7 +101,8 @@ class HomePage extends StatelessWidget {
                   itemCount: 5,
                   itemBuilder: (context, index) {
                     return ListTile(
-                      leading: Icon(Icons.location_on, color: Colors.blueAccent),
+                      leading:
+                          Icon(Icons.location_on, color: Colors.blueAccent),
                       title: Text('Destination ${index + 1}'),
                       subtitle: const Text('Explore this beautiful place'),
                       trailing: const Icon(Icons.arrow_forward_ios),
@@ -131,7 +140,8 @@ class HomePage extends StatelessWidget {
         ),
         child: Text(
           title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -149,7 +159,6 @@ class HomePage extends StatelessWidget {
         const SizedBox(height: 5),
         Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
       ],
-
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screen/PreferenceScreen.dart';
+import '../services/auth_services.dart';
+
 class BeautifulAppBar extends StatelessWidget implements PreferredSizeWidget {
   final int currentIndex;
   final List<String> titles;
@@ -18,60 +20,84 @@ class BeautifulAppBar extends StatelessWidget implements PreferredSizeWidget {
         MaterialPageRoute(builder: (context) => PreferenceScreen()),
       );
     } else if (value == 'logout') {
-      // Implement logout functionality here
-      print("User logged out");
-      // For example, clear session data or token, then navigate to login screen
+      // Implement logout functionality
+      AuthService().signOut(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Align(
-        alignment: Alignment.centerLeft, // Align title to the left
-        child: Text(
-          titles[currentIndex],
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.2,
-            color: Colors.white, // Ensure text is visible
-          ),
+      title: Text(
+        titles[currentIndex],
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.2,
+          color: Colors.white,
         ),
       ),
       backgroundColor: Colors.indigoAccent,
       elevation: 4,
       actions: [
+        // Add notification icon
+        IconButton(
+          icon: Icon(Icons.notifications_none, color: Colors.white),
+          onPressed: () {
+            // Show notifications
+          },
+        ),
+
+        // Add profile icon or popup menu
         PopupMenuButton<String>(
+          icon: CircleAvatar(
+            backgroundColor: Colors.white,
+            radius: 16,
+            child: Icon(
+              Icons.person_outline,
+              color: Colors.indigoAccent,
+              size: 18,
+            ),
+          ),
           onSelected: (value) => _onMenuItemSelected(value, context),
-          icon: Icon(Icons.person_outline, color: Colors.white),
           itemBuilder: (context) => [
-            PopupMenuItem<String>(
-              value: 'settings',
+            PopupMenuItem(
+              value: 'profile',
               child: Row(
                 children: [
-                  Icon(Icons.settings, color: Colors.black),
-                  SizedBox(width: 10),
-                  Text("Settings"),
+                  Icon(Icons.person, color: Colors.indigoAccent),
+                  SizedBox(width: 8),
+                  Text('Profile'),
                 ],
               ),
             ),
-            PopupMenuItem<String>(
+            PopupMenuItem(
+              value: 'settings',
+              child: Row(
+                children: [
+                  Icon(Icons.settings, color: Colors.grey),
+                  SizedBox(width: 8),
+                  Text('Settings'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
               value: 'logout',
               child: Row(
                 children: [
-                  Icon(Icons.exit_to_app, color: Colors.black),
-                  SizedBox(width: 10),
-                  Text("Logout"),
+                  Icon(Icons.logout, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Logout'),
                 ],
               ),
             ),
           ],
         ),
+        SizedBox(width: 8),
       ],
     );
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight); // Standard AppBar height
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
