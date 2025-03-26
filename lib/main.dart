@@ -8,6 +8,9 @@ import './services/auth_services.dart';
 import './screen/login.dart';
 import './screen/signup.dart';
 import './screen/main_layout.dart';
+import './screen/admin/manage_destinations.dart';
+import './screen/admin/edit_destination.dart';
+import './screen/admin/destination_details.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +37,24 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const Signup(),
         '/home': (context) => const MainLayout(),
         '/admin-dashboard': (context) => const AdminDashboardScreen(),
+        '/manage-destinations': (context) => const ManageDestinationsScreen(),
+        '/edit-destination': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          return EditDestinationScreen(
+            destinationId: args is String ? args : null,
+          );
+        },
+        '/destination-details': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is String) {
+            return DestinationDetailsScreen(destinationId: args);
+          }
+          // Handle error case
+          return Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: const Center(child: Text('Invalid destination ID')),
+          );
+        },
         // Add other routes as needed
       },
     );
