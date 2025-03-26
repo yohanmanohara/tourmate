@@ -1,9 +1,14 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as path;
+import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:crypto/crypto.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class EditDestinationScreen extends StatefulWidget {
   final String? destinationId;
@@ -118,17 +123,146 @@ class _EditDestinationScreenState extends State<EditDestinationScreen> {
 
   Future<List<String>> _uploadImages() async {
     final List<String> imageUrls = [];
+    final uuid = Uuid();
+
+    // Get AWS credentials from .env
+    final awsAccessKey = dotenv.env['AWS_ACCESS_KEY'];
+    final awsSecretKey = dotenv.env['AWS_SECRET_KEY'];
+    final awsRegion = dotenv.env['AWS_REGION'];
+    final bucketName = dotenv.env['AWS_BUCKET_NAME'];
+
+    if (awsAccessKey == null ||
+        awsSecretKey == null ||
+        awsRegion == null ||
+        bucketName == null) {
+      throw Exception('AWS credentials not found in environment variables');
+    }
 
     for (var imageFile in _newImageFiles) {
-      final fileName = path.basename(imageFile.path);
-      final destination =
-          'destinations/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+      try {
+        // Generate unique filename with UUID to prevent conflicts
+        final fileExtension = path.extension(imageFile.path);
+        final uniqueId = uuid.v4();
+        final fileName =
+            'destinations/${DateTime.now().millisecondsSinceEpoch}_$uniqueId$fileExtension';
 
-      final ref = FirebaseStorage.instance.ref(destination);
-      await ref.putFile(imageFile);
+        // Read file as bytes
+        final bytes = await imageFile.readAsBytes();
 
-      final url = await ref.getDownloadURL();
-      imageUrls.add(url);
+        // Prepare the URL for the S3 bucket
+        final endpoint =
+            'https://$bucketName.s3.$awsRegion.amazonaws.com/$fileName';
+
+        // Get current date and time in UTC
+        final now = DateTime.now().toUtc();
+
+        // Format date for AWS signature (YYYYMMDD)
+        final dateStamp =
+            '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+
+        // Format amzDate (ISO8601 basic format: YYYYMMDD'T'HHMMSS'Z')
+        final amzDate =
+            '${dateStamp}T${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}Z';
+
+        // Create AWS headers for authentication
+        final contentType = 'image/${fileExtension.substring(1)}';
+        final payloadHash = sha256.convert(bytes).toString();
+
+        final headers = {
+          'host': '$bucketName.s3.$awsRegion.amazonaws.com',
+          'content-type': contentType,
+          'x-amz-content-sha256': payloadHash,
+          'x-amz-date': amzDate,
+          'x-amz-acl': 'public-read', // Make the file publicly accessible
+        };
+
+        // Get signed headers (must be sorted)
+        final signedHeadersKeys = headers.keys.toList()..sort();
+        final signedHeadersStr = signedHeadersKeys.join(';');
+
+        // Create canonical headers (must be sorted by key)
+        final canonicalHeaders =
+            signedHeadersKeys.map((key) => '$key:${headers[key]}\n').join();
+
+        // Generate AWS Signature Version 4
+        final canonicalUri = '/$fileName';
+        final canonicalQueryString = '';
+
+        // Create canonical request
+        final canonicalRequest = [
+          'PUT',
+          canonicalUri,
+          canonicalQueryString,
+          canonicalHeaders,
+          signedHeadersStr,
+          payloadHash,
+        ].join('\n');
+
+        // String to sign
+        final algorithm = 'AWS4-HMAC-SHA256';
+        final credentialScope = '$dateStamp/$awsRegion/s3/aws4_request';
+
+        final canonicalRequestHash =
+            sha256.convert(utf8.encode(canonicalRequest)).toString();
+
+        final stringToSign = [
+          algorithm,
+          amzDate,
+          credentialScope,
+          canonicalRequestHash,
+        ].join('\n');
+
+        // Calculate signature
+        // Step 1: Create signing key
+        final kSecret = utf8.encode('AWS4$awsSecretKey');
+        final kDate =
+            Hmac(sha256, kSecret).convert(utf8.encode(dateStamp)).bytes;
+        final kRegion =
+            Hmac(sha256, kDate).convert(utf8.encode(awsRegion)).bytes;
+        final kService = Hmac(sha256, kRegion).convert(utf8.encode('s3')).bytes;
+        final kSigning =
+            Hmac(sha256, kService).convert(utf8.encode('aws4_request')).bytes;
+
+        // Step 2: Calculate signature
+        final signature = Hmac(sha256, kSigning)
+            .convert(utf8.encode(stringToSign))
+            .toString();
+
+        // Create authorization header
+        final authorization =
+            '$algorithm Credential=$awsAccessKey/$credentialScope, ' +
+                'SignedHeaders=$signedHeadersStr, Signature=$signature';
+
+        // Prepare headers for the request (with proper case)
+        final requestHeaders = {
+          'Host': '$bucketName.s3.$awsRegion.amazonaws.com',
+          'Content-Type': contentType,
+          'x-amz-content-sha256': payloadHash,
+          'x-amz-date': amzDate,
+          'x-amz-acl': 'public-read',
+          'Authorization': authorization,
+        };
+
+        // Send request to S3
+        final response = await http.put(
+          Uri.parse(endpoint),
+          body: bytes,
+          headers: requestHeaders,
+        );
+
+        if (response.statusCode == 200) {
+          // S3 returns 200 on successful PUT
+          imageUrls.add(endpoint);
+        } else {
+          print(
+              'Upload failed with status: ${response.statusCode}, body: ${response.body}');
+          throw Exception(
+              'Failed to upload image: ${response.statusCode} - ${response.body}');
+        }
+      } catch (e) {
+        print('Upload exception: $e');
+        throw Exception('Error uploading image: $e');
+      }
     }
 
     return imageUrls;
@@ -162,11 +296,16 @@ class _EditDestinationScreenState extends State<EditDestinationScreen> {
         'features': _features,
         'images': allImages,
         'updatedAt': FieldValue.serverTimestamp(),
+        'coordinates': {
+          'latitude': 0.0, // Replace with actual coordinates when implemented
+          'longitude': 0.0, // Replace with actual coordinates when implemented
+        },
       };
 
-      // Add createdAt for new destinations
+      // Add createdAt and averageRating for new destinations
       if (!_isEdit) {
         destinationData['createdAt'] = FieldValue.serverTimestamp();
+        destinationData['averageRating'] = 0.0;
       }
 
       // Save to Firestore
