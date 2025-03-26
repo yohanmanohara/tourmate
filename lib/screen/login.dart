@@ -168,15 +168,42 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                                       _isLoading = true;
                                     });
 
-                                    await AuthService().login(
-                                      context: context,
-                                      email: _emailController.text,
-                                      password: _passwordController.text,
-                                    );
+                                    try {
+                                      // Call login method from AuthService
+                                      final loginResult =
+                                          await AuthService().login(
+                                        context: context,
+                                        email: _emailController.text,
+                                        password: _passwordController.text,
+                                      );
 
-                                    setState(() {
-                                      _isLoading = false;
-                                    });
+                                      // If login was successful but no navigation happened
+                                      if (loginResult == true && mounted) {
+                                        // Get the current user's role
+                                        final userStatus = await AuthService()
+                                            .getCurrentUserRole();
+
+                                        if (userStatus['isLoggedIn']) {
+                                          // Navigate based on role
+                                          if (userStatus['role'] == 'admin') {
+                                            Navigator.pushReplacementNamed(
+                                                context, '/admin-dashboard');
+                                          } else {
+                                            Navigator.pushReplacementNamed(
+                                                context, '/home');
+                                          }
+                                        }
+                                      }
+                                    } catch (e) {
+                                      // Error already handled by AuthService
+                                      print("Login error: $e");
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() {
+                                          _isLoading = false;
+                                        });
+                                      }
+                                    }
                                   },
                             text: 'Login',
                             isLoading: _isLoading,
@@ -225,17 +252,30 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                                 final user = await AuthService()
                                     .signInWithGoogle(context);
 
-                                if (user != null) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => MainLayout()),
-                                  );
+                                if (user != null && mounted) {
+                                  // Get the current user's role after successful Google sign-in
+                                  final userStatus =
+                                      await AuthService().getCurrentUserRole();
+
+                                  if (userStatus['isLoggedIn']) {
+                                    // Navigate based on role
+                                    if (userStatus['role'] == 'admin') {
+                                      Navigator.pushReplacementNamed(
+                                          context, '/admin-dashboard');
+                                    } else {
+                                      Navigator.pushReplacementNamed(
+                                          context, '/home');
+                                    }
+                                  }
                                 }
+                              } catch (e) {
+                                print("Google sign-in error: $e");
                               } finally {
-                                setState(() {
-                                  _isLoading = false;
-                                });
+                                if (mounted) {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
                               }
                             },
                             text: 'Sign in with Google',

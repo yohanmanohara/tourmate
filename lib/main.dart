@@ -7,6 +7,7 @@ import './screen/admin/admin_dashboard.dart';
 import './services/auth_services.dart';
 import './screen/login.dart';
 import './screen/signup.dart';
+import './screen/main_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,9 +79,10 @@ class _AuthValidateState extends State<AuthValidate> {
                 builder: (context) => const AdminDashboardScreen()),
           );
         } else {
+          // Regular users go to MainLayout instead of HomePage directly
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
+            MaterialPageRoute(builder: (context) => const MainLayout()),
           );
         }
       } else {
