@@ -40,16 +40,10 @@ class AuthService {
   // Navigate based on role
   void _navigateBasedOnRole(BuildContext context, String role) {
     if (role == 'admin') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
-      );
+      Navigator.pushReplacementNamed(context, '/admin-dashboard');
     } else {
-      // Regular users should go to MainLayout which includes the bottom nav bar
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainLayout()),
-      );
+      Navigator.pushReplacementNamed(
+          context, '/home'); // This will now go to MainLayout
     }
   }
 

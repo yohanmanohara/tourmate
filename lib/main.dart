@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const Login(),
         '/signup': (context) => const Signup(),
-        '/home': (context) => const HomePage(),
+        '/home': (context) => const MainLayout(),
         '/admin-dashboard': (context) => const AdminDashboardScreen(),
         // Add other routes as needed
       },
@@ -73,17 +73,9 @@ class _AuthValidateState extends State<AuthValidate> {
 
       if (userStatus['isLoggedIn']) {
         if (userStatus['role'] == 'admin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const AdminDashboardScreen()),
-          );
+          Navigator.pushReplacementNamed(context, '/admin-dashboard');
         } else {
-          // Regular users go to MainLayout instead of HomePage directly
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainLayout()),
-          );
+          Navigator.pushReplacementNamed(context, '/home');
         }
       } else {
         // Not logged in, show onboarding
