@@ -9,6 +9,9 @@ import 'package:uuid/uuid.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'map_selector.dart';
 
 class EditDestinationScreen extends StatefulWidget {
   final String? destinationId;
@@ -27,6 +30,12 @@ class _EditDestinationScreenState extends State<EditDestinationScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
+
+  // Add these variables for map functionality
+  double _latitude = 7.8731; // Default to center of Sri Lanka
+  double _longitude = 80.7718;
+  final MapController _mapController = MapController();
+  bool _locationSelected = false;
 
   String _category = 'Historical';
   List<String> _features = [];
@@ -81,6 +90,15 @@ class _EditDestinationScreenState extends State<EditDestinationScreen> {
         _titleController.text = data['title'] ?? '';
         _descriptionController.text = data['description'] ?? '';
         _locationController.text = data['location'] ?? '';
+
+        // Load coordinates
+        if (data['coordinates'] != null) {
+          setState(() {
+            _latitude = data['coordinates']['latitude'] ?? 7.8731;
+            _longitude = data['coordinates']['longitude'] ?? 80.7718;
+            _locationSelected = true;
+          });
+        }
 
         if (data['category'] != null) {
           setState(() {
@@ -297,8 +315,8 @@ class _EditDestinationScreenState extends State<EditDestinationScreen> {
         'images': allImages,
         'updatedAt': FieldValue.serverTimestamp(),
         'coordinates': {
-          'latitude': 0.0, // Replace with actual coordinates when implemented
-          'longitude': 0.0, // Replace with actual coordinates when implemented
+          'latitude': _latitude,
+          'longitude': _longitude,
         },
       };
 
@@ -332,6 +350,29 @@ class _EditDestinationScreenState extends State<EditDestinationScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  // Add this method to open a fullscreen map selector
+  void _openMapSelector() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapSelectorScreen(
+          initialLatitude: _latitude,
+          initialLongitude: _longitude,
+        ),
+      ),
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      setState(() {
+        _latitude = result['latitude'];
+        _longitude = result['longitude'];
+        _locationSelected = true;
+        _locationController.text = result['address'] ??
+            'Lat: ${_latitude.toStringAsFixed(6)}, Lng: ${_longitude.toStringAsFixed(6)}';
+      });
     }
   }
 
@@ -433,16 +474,84 @@ class _EditDestinationScreenState extends State<EditDestinationScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Location
+                    // Replace Location TextField with Map
+                    const Text(
+                      'Location',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Map preview container
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Stack(
+                        children: [
+                          FlutterMap(
+                            mapController: _mapController,
+                            options: MapOptions(
+                              initialCenter: LatLng(_latitude, _longitude),
+                              initialZoom: 10.0,
+                            ),
+                            children: [
+                              TileLayer(
+                                urlTemplate:
+                                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                subdomains: const ['a', 'b', 'c'],
+                              ),
+                              MarkerLayer(
+                                markers: [
+                                  if (_locationSelected)
+                                    Marker(
+                                      width: 80.0,
+                                      height: 80.0,
+                                      point: LatLng(_latitude, _longitude),
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        color: Colors.red,
+                                        size: 40.0,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Positioned(
+                            right: 10,
+                            bottom: 10,
+                            child: ElevatedButton.icon(
+                              onPressed: _openMapSelector,
+                              icon: const Icon(Icons.fullscreen),
+                              label: const Text('Select Location'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Location address display
                     TextFormField(
                       controller: _locationController,
                       decoration: const InputDecoration(
-                        labelText: 'Location',
+                        labelText: 'Location Address',
                         border: OutlineInputBorder(),
+                        hintText:
+                            'Address will appear after selecting location on map',
                       ),
+                      readOnly: true,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a location';
+                        if (value == null ||
+                            value.isEmpty ||
+                            !_locationSelected) {
+                          return 'Please select a location on the map';
                         }
                         return null;
                       },
