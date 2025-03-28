@@ -72,4 +72,48 @@ class FirestoreService {
       return [];
     }
   }
+
+  // Delete a user (admin use only)
+  Future<void> deleteUser(String uid) async {
+    try {
+      await _firestore.collection('users').doc(uid).delete();
+    } catch (e) {
+      print('Error deleting user: $e');
+      rethrow;
+    }
+  }
+
+  // Get user statistics for admin dashboard
+  Future<Map<String, int>> getUserStatistics() async {
+    try {
+      final QuerySnapshot userSnapshot =
+          await _firestore.collection('users').get();
+      final int totalUsers = userSnapshot.docs.length;
+
+      int adminCount = 0;
+      int regularUserCount = 0;
+
+      for (var doc in userSnapshot.docs) {
+        final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        if (data['role'] == 'admin') {
+          adminCount++;
+        } else {
+          regularUserCount++;
+        }
+      }
+
+      return {
+        'totalUsers': totalUsers,
+        'adminCount': adminCount,
+        'regularUserCount': regularUserCount,
+      };
+    } catch (e) {
+      print('Error getting user statistics: $e');
+      return {
+        'totalUsers': 0,
+        'adminCount': 0,
+        'regularUserCount': 0,
+      };
+    }
+  }
 }
