@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class DestinationDetailsScreen extends StatelessWidget {
   final String destinationId;
@@ -8,6 +11,15 @@ class DestinationDetailsScreen extends StatelessWidget {
     Key? key,
     required this.destinationId,
   }) : super(key: key);
+
+  void _openInGoogleMaps(double lat, double lng) async {
+    final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+    if (await canLaunchUrlString(url)) {
+      await launchUrlString(url);
+    } else {
+      throw 'Could not open Google Maps';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +59,11 @@ class DestinationDetailsScreen extends StatelessWidget {
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final List<dynamic> imagesList = data['images'] ?? [];
+
+          // Get coordinates for the map - default to center of Sri Lanka if not available
+          final double latitude = data['coordinates']?['latitude'] ?? 7.8731;
+          final double longitude = data['coordinates']?['longitude'] ?? 80.7718;
+          final bool hasCoordinates = data['coordinates'] != null;
 
           return SingleChildScrollView(
             child: Column(
@@ -152,7 +169,81 @@ class DestinationDetailsScreen extends StatelessWidget {
                             Text(data['location'] ?? 'Location not specified'),
                       ),
 
-                      const Divider(),
+                      // Map section
+                      const SizedBox(height: 16),
+                      Container(
+                        height: 250,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Stack(
+                            children: [
+                              FlutterMap(
+                                options: MapOptions(
+                                  initialCenter: LatLng(latitude, longitude),
+                                  initialZoom: 13.0,
+                                ),
+                                children: [
+                                  TileLayer(
+                                    urlTemplate:
+                                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    subdomains: const ['a', 'b', 'c'],
+                                  ),
+                                  MarkerLayer(
+                                    markers: [
+                                      if (hasCoordinates)
+                                        Marker(
+                                          width: 80.0,
+                                          height: 80.0,
+                                          point: LatLng(latitude, longitude),
+                                          child: const Icon(
+                                            Icons.location_on,
+                                            color: Colors.red,
+                                            size: 40.0,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              // Directions button
+                              if (hasCoordinates)
+                                Positioned(
+                                  right: 10,
+                                  bottom: 10,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () =>
+                                        _openInGoogleMaps(latitude, longitude),
+                                    icon: const Icon(Icons.directions),
+                                    label: const Text('Get Directions'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.white.withOpacity(0.8),
+                                      foregroundColor: Colors.blue[700],
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      if (hasCoordinates)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'Coordinates: ${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ),
+
+                      const Divider(height: 32),
 
                       // Additional details
                       if (data['features'] != null &&
