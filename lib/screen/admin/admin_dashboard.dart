@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/auth_services.dart';
+import '../../services/firestore_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -10,6 +12,60 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
+  final FirestoreService _firestoreService = FirestoreService();
+  bool _isLoading = true;
+
+  // Statistics variables
+  Map<String, dynamic> _stats = {
+    'totalDestinations': 0,
+    'totalUsers': 0,
+    'totalReviews': 0,
+    'adminCount': 0,
+    'regularUserCount': 0,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatistics();
+  }
+
+  Future<void> _loadStatistics() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Get user statistics
+      final userStats = await _firestoreService.getUserStatistics();
+
+      // Get destination count
+      final destinationsSnapshot = await FirebaseFirestore.instance
+          .collection('destinations')
+          .count()
+          .get();
+
+      // Get reviews count (assuming you have a reviews collection)
+      final reviewsSnapshot =
+          await FirebaseFirestore.instance.collection('reviews').count().get();
+
+      setState(() {
+        _stats = {
+          'totalDestinations': destinationsSnapshot.count,
+          'totalUsers': userStats['totalUsers'],
+          'totalReviews': reviewsSnapshot.count,
+          'adminCount': userStats['adminCount'],
+          'regularUserCount': userStats['regularUserCount'],
+        };
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading statistics: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +73,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final Size screenSize = MediaQuery.of(context).size;
     final bool isSmallScreen = screenSize.width < 360;
     final double horizontalPadding = isSmallScreen ? 12.0 : 16.0;
-
-    // Sample data - in a real app, fetch these from Firestore.
-    final int totalDestinations = 25;
-    final int totalUsers = 10;
-    final int totalReviews = 40;
 
     return Scaffold(
       appBar: AppBar(
@@ -37,6 +88,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         elevation: 4,
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            tooltip: 'Refresh statistics',
+            onPressed: _loadStatistics,
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.white),
             onPressed: () {
               // Show notifications
@@ -51,115 +107,233 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: isSmallScreen ? 12.0 : 16.0,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Admin Overview Header
-                const Text(
-                  'Dashboard Overview',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(Colors.indigoAccent),
                 ),
-                const SizedBox(height: 10),
-
-                // Dashboard statistics cards - Made more responsive
-                Wrap(
-                  spacing: isSmallScreen ? 6 : 8,
-                  runSpacing: isSmallScreen ? 6 : 8,
-                  alignment: WrapAlignment.spaceEvenly,
-                  children: [
-                    _buildDashboardCard('Destinations', totalDestinations,
-                        Icons.map, Colors.blueAccent, screenSize),
-                    _buildDashboardCard('Users', totalUsers, Icons.people,
-                        Colors.indigoAccent, screenSize),
-                    _buildDashboardCard('Reviews', totalReviews, Icons.star,
-                        Colors.orangeAccent, screenSize),
-                  ],
-                ),
-
-                SizedBox(height: isSmallScreen ? 16 : 24),
-
-                // Admin Actions Header
-                const Text(
-                  'Management Options',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-
-                // Navigation ListTiles in a Card
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              )
+            : SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: isSmallScreen ? 12.0 : 16.0,
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildListTile(
-                          context,
-                          'Manage Destinations',
-                          Icons.map,
-                          Colors.blueAccent,
-                          '/manage-destinations',
-                          isSmallScreen),
-                      const Divider(),
-                      _buildListTile(context, 'Manage Users', Icons.people,
-                          Colors.indigoAccent, '/manage-users', isSmallScreen),
-                      const Divider(),
-                      _buildListTile(
-                          context,
-                          'Manage Reviews',
-                          Icons.star,
-                          Colors.orangeAccent,
-                          '/manage-reviews',
-                          isSmallScreen),
+                      // Admin Overview Header with refresh indicator
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Dashboard Overview',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          // Last updated info
+                          Text(
+                            'Last updated: ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Dashboard statistics cards - Now using real data
+                      Wrap(
+                        spacing: isSmallScreen ? 6 : 8,
+                        runSpacing: isSmallScreen ? 6 : 8,
+                        alignment: WrapAlignment.spaceEvenly,
+                        children: [
+                          _buildDashboardCard(
+                              'Destinations',
+                              _stats['totalDestinations'],
+                              Icons.map,
+                              Colors.blueAccent,
+                              screenSize),
+                          _buildDashboardCard('Users', _stats['totalUsers'],
+                              Icons.people, Colors.indigoAccent, screenSize),
+                          _buildDashboardCard('Reviews', _stats['totalReviews'],
+                              Icons.star, Colors.orangeAccent, screenSize),
+                        ],
+                      ),
+
+                      // Additional Statistics - User breakdown with percentage
+                      SizedBox(height: isSmallScreen ? 16 : 20),
+                      const Text(
+                        'User Statistics',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Users breakdown
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Total Users',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  Text(
+                                    '${_stats['totalUsers']}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Progress indicators for user types
+                              _buildUserTypeIndicator(
+                                'Admin Users',
+                                _stats['adminCount'],
+                                _stats['totalUsers'],
+                                Colors.indigoAccent,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildUserTypeIndicator(
+                                'Regular Users',
+                                _stats['regularUserCount'],
+                                _stats['totalUsers'],
+                                Colors.greenAccent[700]!,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: isSmallScreen ? 16 : 24),
+
+                      // Admin Actions Header
+                      const Text(
+                        'Management Options',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Navigation ListTiles in a Card
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildListTile(
+                                context,
+                                'Manage Destinations',
+                                '${_stats['totalDestinations']} destinations',
+                                Icons.map,
+                                Colors.blueAccent,
+                                '/manage-destinations',
+                                isSmallScreen),
+                            const Divider(),
+                            _buildListTile(
+                                context,
+                                'Manage Users',
+                                '${_stats['totalUsers']} users',
+                                Icons.people,
+                                Colors.indigoAccent,
+                                '/manage-users',
+                                isSmallScreen),
+                            const Divider(),
+                            _buildListTile(
+                                context,
+                                'Manage Reviews',
+                                '${_stats['totalReviews']} reviews',
+                                Icons.star,
+                                Colors.orangeAccent,
+                                '/manage-reviews',
+                                isSmallScreen),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: isSmallScreen ? 16 : 20),
+
+                      // Quick Actions Section
+                      const Text(
+                        'Quick Actions',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Responsive GridView for quick actions
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: screenSize.width < 480 ? 3 : 4,
+                        childAspectRatio: isSmallScreen ? 0.9 : 1.0,
+                        mainAxisSpacing: isSmallScreen ? 8 : 12,
+                        crossAxisSpacing: isSmallScreen ? 8 : 12,
+                        children: [
+                          _buildActionButton(
+                            Icons.add_location,
+                            'Add Destination',
+                            Colors.blueAccent,
+                            isSmallScreen,
+                            onTap: () => Navigator.pushNamed(
+                                context, '/edit-destination'),
+                          ),
+                          _buildActionButton(
+                            Icons.person_add,
+                            'Add User',
+                            Colors.indigoAccent,
+                            isSmallScreen,
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/manage-users'),
+                          ),
+                          _buildActionButton(Icons.analytics, 'Analytics',
+                              Colors.purpleAccent, isSmallScreen),
+                          _buildActionButton(Icons.settings, 'Settings',
+                              Colors.grey, isSmallScreen),
+                          _buildActionButton(Icons.help_outline, 'Help',
+                              Colors.teal, isSmallScreen),
+                          _buildActionButton(
+                            Icons.logout,
+                            'Logout',
+                            Colors.redAccent,
+                            isSmallScreen,
+                            onTap: () async {
+                              await AuthService().signOut(context);
+                            },
+                          ),
+                        ],
+                      ),
+
+                      // Responsive bottom padding
+                      SizedBox(
+                          height: MediaQuery.of(context).padding.bottom + 80),
                     ],
                   ),
                 ),
-
-                SizedBox(height: isSmallScreen ? 16 : 20),
-
-                // Quick Actions Section
-                const Text(
-                  'Quick Actions',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-
-                // Responsive GridView for quick actions
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: screenSize.width < 480 ? 3 : 4,
-                  childAspectRatio: isSmallScreen ? 0.9 : 1.0,
-                  mainAxisSpacing: isSmallScreen ? 8 : 12,
-                  crossAxisSpacing: isSmallScreen ? 8 : 12,
-                  children: [
-                    _buildActionButton(Icons.add_location, 'Add Destination',
-                        Colors.blueAccent, isSmallScreen),
-                    _buildActionButton(Icons.person_add, 'Add User',
-                        Colors.indigoAccent, isSmallScreen),
-                    _buildActionButton(Icons.analytics, 'Analytics',
-                        Colors.purpleAccent, isSmallScreen),
-                    _buildActionButton(
-                        Icons.settings, 'Settings', Colors.grey, isSmallScreen),
-                    _buildActionButton(
-                        Icons.help_outline, 'Help', Colors.teal, isSmallScreen),
-                    _buildActionButton(Icons.logout, 'Logout', Colors.redAccent,
-                        isSmallScreen),
-                  ],
-                ),
-
-                // Responsive bottom padding
-                SizedBox(height: MediaQuery.of(context).padding.bottom + 80),
-              ],
-            ),
-          ),
-        ),
+              ),
       ),
 
       // Enhanced Bottom Navigation Bar
@@ -210,8 +384,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   // Enhanced list tile for better responsiveness
-  Widget _buildListTile(BuildContext context, String title, IconData icon,
-      Color color, String route, bool isSmall) {
+  Widget _buildListTile(BuildContext context, String title, String subtitle,
+      IconData icon, Color color, String route, bool isSmall) {
     return ListTile(
       contentPadding: EdgeInsets.symmetric(
         horizontal: isSmall ? 12 : 16,
@@ -223,6 +397,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: isSmall ? 14 : 16,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          fontSize: isSmall ? 10 : 12,
+          color: Colors.grey[600],
         ),
       ),
       trailing: Icon(
@@ -333,21 +514,50 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   // Enhanced action button for better responsiveness
   Widget _buildActionButton(
-      IconData icon, String title, Color color, bool isSmall) {
+      IconData icon, String title, Color color, bool isSmall,
+      {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: isSmall ? 24 : 28,
+            backgroundColor: color,
+            child: Icon(icon, color: Colors.white, size: isSmall ? 22 : 28),
+          ),
+          SizedBox(height: isSmall ? 3 : 5),
+          Text(
+            title,
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: isSmall ? 10 : 12),
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // User type indicator with progress bar
+  Widget _buildUserTypeIndicator(
+      String label, int count, int total, Color color) {
+    final double percentage = (total > 0) ? (count / total) : 0.0;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          radius: isSmall ? 24 : 28,
-          backgroundColor: color,
-          child: Icon(icon, color: Colors.white, size: isSmall ? 22 : 28),
-        ),
-        SizedBox(height: isSmall ? 3 : 5),
         Text(
-          title,
+          '$label: $count',
           style: TextStyle(
-              fontWeight: FontWeight.bold, fontSize: isSmall ? 10 : 12),
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
+        ),
+        const SizedBox(height: 4),
+        LinearProgressIndicator(
+          value: percentage,
+          backgroundColor: Colors.grey[300],
+          valueColor: AlwaysStoppedAnimation<Color>(color),
         ),
       ],
     );
