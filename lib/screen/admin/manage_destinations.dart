@@ -309,6 +309,8 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                       }
                     }
 
+                    // Updated destination card UI without redundant buttons
+
                     return Card(
                       elevation: 1,
                       margin: const EdgeInsets.only(bottom: 16),
@@ -319,512 +321,410 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                           width: 1,
                         ),
                       ),
-                      child: Column(
-                        children: [
-                          // Main card content
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                if (_expandedItems.contains(doc.id)) {
-                                  _expandedItems.remove(doc.id);
-                                } else {
-                                  _expandedItems.add(doc.id);
-                                }
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(16),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  // Responsive layout based on available width
-                                  final isNarrow = constraints.maxWidth < 400;
+                      clipBehavior: Clip.antiAlias, // Prevent child overflow
+                      child: InkWell(
+                        // Navigate to destination details on tap
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/destination-details',
+                            arguments: doc.id,
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isSmallScreen ? 10 : 16,
+                            vertical: isSmallScreen ? 12 : 16,
+                          ),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              // Responsive layout based on available width
+                              final bool isNarrow = constraints.maxWidth < 400;
+                              final double imageSize =
+                                  isSmallScreen ? 60 : (isNarrow ? 70 : 80);
 
-                                  return Column(
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // Leading image
-                                          Hero(
-                                            tag: 'destination-${doc.id}',
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              child: Stack(
-                                                children: [
-                                                  Image.network(
-                                                    data['images']?[0] ?? '',
-                                                    width: isNarrow ? 70 : 90,
-                                                    height: isNarrow ? 70 : 90,
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Leading image with improved loading and error handling
+                                  Hero(
+                                    tag: 'destination-${doc.id}',
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Container(
+                                        width: imageSize,
+                                        height: imageSize,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.1),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            // Image or placeholder
+                                            data['images'] != null &&
+                                                    (data['images'] as List)
+                                                        .isNotEmpty
+                                                ? Image.network(
+                                                    data['images'][0],
                                                     fit: BoxFit.cover,
+                                                    loadingBuilder: (context,
+                                                        child,
+                                                        loadingProgress) {
+                                                      if (loadingProgress ==
+                                                          null) return child;
+                                                      return Container(
+                                                        color: Colors.grey[200],
+                                                        child: Center(
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                            value: loadingProgress
+                                                                        .expectedTotalBytes !=
+                                                                    null
+                                                                ? loadingProgress
+                                                                        .cumulativeBytesLoaded /
+                                                                    loadingProgress
+                                                                        .expectedTotalBytes!
+                                                                : null,
+                                                            strokeWidth: 2,
+                                                            color: Colors.indigo
+                                                                .withOpacity(
+                                                                    0.5),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
                                                     errorBuilder:
                                                         (_, __, ___) =>
                                                             Container(
-                                                      width: isNarrow ? 70 : 90,
-                                                      height:
-                                                          isNarrow ? 70 : 90,
                                                       color: Colors.grey[200],
-                                                      child: const Icon(
+                                                      child: Icon(
                                                         Icons
                                                             .image_not_supported,
-                                                        size: 24,
-                                                        color: Colors.grey,
+                                                        size: imageSize / 3,
+                                                        color: Colors.grey[400],
                                                       ),
+                                                    ),
+                                                  )
+                                                : Container(
+                                                    color: Colors.grey[200],
+                                                    child: Icon(
+                                                      Icons.photo_outlined,
+                                                      size: imageSize / 3,
+                                                      color: Colors.grey[400],
                                                     ),
                                                   ),
-                                                  // Rating badge
-                                                  if (data['averageRating'] !=
-                                                      null)
-                                                    Positioned(
-                                                      top: 0,
-                                                      right: 0,
-                                                      child: Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                          horizontal: 6,
-                                                          vertical: 2,
-                                                        ),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Colors.indigo
-                                                              .withOpacity(
-                                                                  0.85),
-                                                          borderRadius:
-                                                              const BorderRadius
-                                                                  .only(
-                                                            bottomLeft:
-                                                                Radius.circular(
-                                                                    8),
-                                                          ),
-                                                        ),
-                                                        child: Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          children: [
-                                                            const Icon(
-                                                              Icons.star,
-                                                              size: 14,
-                                                              color:
-                                                                  Colors.amber,
-                                                            ),
-                                                            const SizedBox(
-                                                                width: 2),
-                                                            Text(
-                                                              '${(data['averageRating'] as num? ?? 0).toStringAsFixed(1)}',
-                                                              style:
-                                                                  const TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 12,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
 
-                                          // Destination details
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                // Title row with actions
-                                                Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    // Title
-                                                    Expanded(
-                                                      child: Text(
-                                                        data['title'] ??
-                                                            'Unknown',
+                                            // Rating badge with improved position
+                                            if (data['averageRating'] != null)
+                                              Positioned(
+                                                bottom: 0,
+                                                right: 0,
+                                                child: Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.amber
+                                                        .withOpacity(0.9),
+                                                    borderRadius:
+                                                        const BorderRadius.only(
+                                                      topLeft:
+                                                          Radius.circular(8),
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.star,
+                                                        size: 12,
+                                                        color: Colors.white,
+                                                      ),
+                                                      const SizedBox(width: 2),
+                                                      Text(
+                                                        '${(data['averageRating'] as num? ?? 0).toStringAsFixed(1)}',
                                                         style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 10,
                                                           fontWeight:
                                                               FontWeight.bold,
-                                                          fontSize: 17,
-                                                          color: Colors.indigo,
                                                         ),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        maxLines: 2,
                                                       ),
-                                                    ),
-
-                                                    // Actions menu
-                                                    PopupMenuButton<String>(
-                                                      icon: const Icon(
-                                                        Icons.more_vert,
-                                                        color: Colors.grey,
-                                                      ),
-                                                      onSelected: (value) {
-                                                        if (value == 'edit') {
-                                                          Navigator.pushNamed(
-                                                            context,
-                                                            '/edit-destination',
-                                                            arguments: doc.id,
-                                                          );
-                                                        } else if (value ==
-                                                            'delete') {
-                                                          _confirmDelete(
-                                                            context,
-                                                            doc.id,
-                                                            destinationsRef,
-                                                          );
-                                                        } else if (value ==
-                                                            'preview') {
-                                                          Navigator.pushNamed(
-                                                            context,
-                                                            '/destination-details',
-                                                            arguments: doc.id,
-                                                          );
-                                                        }
-                                                      },
-                                                      itemBuilder: (context) =>
-                                                          [
-                                                        const PopupMenuItem(
-                                                          value: 'preview',
-                                                          child: Row(
-                                                            children: [
-                                                              Icon(
-                                                                  Icons
-                                                                      .visibility,
-                                                                  size: 20),
-                                                              SizedBox(
-                                                                  width: 8),
-                                                              Text('Preview'),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        const PopupMenuItem(
-                                                          value: 'edit',
-                                                          child: Row(
-                                                            children: [
-                                                              Icon(Icons.edit,
-                                                                  size: 20),
-                                                              SizedBox(
-                                                                  width: 8),
-                                                              Text('Edit'),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        const PopupMenuItem(
-                                                          value: 'delete',
-                                                          child: Row(
-                                                            children: [
-                                                              Icon(Icons.delete,
-                                                                  size: 20,
-                                                                  color: Colors
-                                                                      .red),
-                                                              SizedBox(
-                                                                  width: 8),
-                                                              Text('Delete',
-                                                                  style: TextStyle(
-                                                                      color: Colors
-                                                                          .red)),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
+                                                    ],
+                                                  ),
                                                 ),
-
-                                                const SizedBox(height: 8),
-
-                                                // Metadata row (category & date)
-                                                Wrap(
-                                                  spacing: 8,
-                                                  runSpacing: 8,
-                                                  crossAxisAlignment:
-                                                      WrapCrossAlignment.center,
-                                                  children: [
-                                                    // Category chip
-                                                    Container(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 4,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.indigo
-                                                            .withOpacity(0.15),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(50),
-                                                      ),
-                                                      child: Text(
-                                                        data['category'] ??
-                                                            'Uncategorized',
-                                                        style: const TextStyle(
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          color: Colors.indigo,
-                                                        ),
-                                                      ),
-                                                    ),
-
-                                                    // Date
-                                                    Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        Icon(
-                                                          Icons.calendar_today,
-                                                          size: 12,
-                                                          color:
-                                                              Colors.grey[600],
-                                                        ),
-                                                        const SizedBox(
-                                                            width: 4),
-                                                        Text(
-                                                          formattedDate,
-                                                          style: TextStyle(
-                                                            fontSize: 12,
-                                                            color: Colors
-                                                                .grey[700],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-
-                                      // Expansion indicator with animation
-                                      AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 200),
-                                        margin: EdgeInsets.only(
-                                          top: _expandedItems.contains(doc.id)
-                                              ? 12
-                                              : 8,
-                                        ),
-                                        child: Icon(
-                                          _expandedItems.contains(doc.id)
-                                              ? Icons.keyboard_arrow_up_rounded
-                                              : Icons
-                                                  .keyboard_arrow_down_rounded,
-                                          color: Colors.grey[500],
-                                          size: 24,
+                                              ),
+                                          ],
                                         ),
                                       ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-
-                          // Expanded details with animation
-                          AnimatedCrossFade(
-                            firstChild: const SizedBox(height: 0),
-                            secondChild: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[50],
-                                borderRadius: const BorderRadius.only(
-                                  bottomLeft: Radius.circular(16),
-                                  bottomRight: Radius.circular(16),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Subtle divider
-                                  Divider(color: Colors.grey[300], height: 1),
-
-                                  // Description
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        16, 16, 16, 8),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Description',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.indigo,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          data['description'] ??
-                                              'No description available',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[800],
-                                            height: 1.4,
-                                          ),
-                                        ),
-                                      ],
                                     ),
                                   ),
 
-                                  // Location information (if available)
-                                  if (data['location'] != null)
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          16, 8, 16, 8),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.location_on,
-                                            size: 16,
-                                            color: Colors.orange[700],
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Expanded(
+                                  SizedBox(width: isSmallScreen ? 10 : 14),
+
+                                  // Content column with improved spacing and layout
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Title and action row with better alignment
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Title with overflow protection
+                                            Expanded(
+                                              child: Text(
+                                                data['title'] ??
+                                                    'Unknown Destination',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize:
+                                                      isSmallScreen ? 14 : 16,
+                                                  color: Colors.indigo,
+                                                  height: 1.2,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 2,
+                                              ),
+                                            ),
+
+                                            // More compact menu
+                                            SizedBox(
+                                              height: 36,
+                                              width: 30,
+                                              child: PopupMenuButton<String>(
+                                                icon: const Icon(
+                                                  Icons.more_vert,
+                                                  color: Colors.grey,
+                                                  size: 20,
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                                splashRadius: 20,
+                                                position:
+                                                    PopupMenuPosition.under,
+                                                onSelected: (value) {
+                                                  if (value == 'edit') {
+                                                    Navigator.pushNamed(
+                                                      context,
+                                                      '/edit-destination',
+                                                      arguments: doc.id,
+                                                    );
+                                                  } else if (value ==
+                                                      'delete') {
+                                                    _confirmDelete(
+                                                      context,
+                                                      doc.id,
+                                                      destinationsRef,
+                                                    );
+                                                  } else if (value ==
+                                                      'preview') {
+                                                    Navigator.pushNamed(
+                                                      context,
+                                                      '/destination-details',
+                                                      arguments: doc.id,
+                                                    );
+                                                  }
+                                                },
+                                                itemBuilder: (context) => [
+                                                  const PopupMenuItem(
+                                                    value: 'preview',
+                                                    height: 40,
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(Icons.visibility,
+                                                            size: 18),
+                                                        SizedBox(width: 8),
+                                                        Text('Preview',
+                                                            style: TextStyle(
+                                                                fontSize: 14)),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const PopupMenuItem(
+                                                    value: 'edit',
+                                                    height: 40,
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(Icons.edit,
+                                                            size: 18),
+                                                        SizedBox(width: 8),
+                                                        Text('Edit',
+                                                            style: TextStyle(
+                                                                fontSize: 14)),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const PopupMenuItem(
+                                                    value: 'delete',
+                                                    height: 40,
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(Icons.delete,
+                                                            size: 18,
+                                                            color: Colors.red),
+                                                        SizedBox(width: 8),
+                                                        Text('Delete',
+                                                            style: TextStyle(
+                                                                color:
+                                                                    Colors.red,
+                                                                fontSize: 14)),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        // Brief description with proper spacing
+                                        if (data['description'] != null &&
+                                            data['description']
+                                                .toString()
+                                                .isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                top: 4, bottom: 6),
                                             child: Text(
-                                              data['location'],
+                                              data['description'],
                                               style: TextStyle(
-                                                fontSize: 13,
+                                                fontSize:
+                                                    isSmallScreen ? 12 : 13,
                                                 color: Colors.grey[800],
+                                                height: 1.3,
                                               ),
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
 
-                                  // Features (if available)
-                                  if (data['features'] != null &&
-                                      (data['features'] as List).isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          16, 8, 16, 8),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Features',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.indigo,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Wrap(
-                                            spacing: 8,
-                                            runSpacing: 8,
-                                            children: (data['features'] as List)
-                                                .map<Widget>((feature) {
-                                              return Chip(
-                                                label: Text(
-                                                  feature,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
+                                        // Location row with improved icon placement
+                                        if (data['location'] != null)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 8),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Icon(
+                                                  Icons.location_on,
+                                                  size: isSmallScreen ? 12 : 14,
+                                                  color: Colors.grey[600],
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Expanded(
+                                                  child: Text(
+                                                    data['location'],
+                                                    style: TextStyle(
+                                                      fontSize: isSmallScreen
+                                                          ? 11
+                                                          : 12,
+                                                      color: Colors.grey[700],
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ),
-                                                backgroundColor:
-                                                    Colors.grey[100],
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(16),
-                                                ),
-                                                visualDensity:
-                                                    VisualDensity.compact,
-                                              );
-                                            }).toList(),
+                                              ],
+                                            ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
 
-                                  // Action buttons
-                                  Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: OutlinedButton.icon(
-                                            icon: const Icon(
-                                                Icons.visibility_outlined),
-                                            label: const Text('Preview'),
-                                            style: OutlinedButton.styleFrom(
-                                              foregroundColor: Colors.indigo,
-                                              side: const BorderSide(
-                                                  color: Colors.indigo),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
+                                        // Metadata row with better stacking for small screens
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 4,
+                                          alignment: WrapAlignment.start,
+                                          children: [
+                                            // Category chip with improved style
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal:
+                                                    isSmallScreen ? 6 : 8,
+                                                vertical: 3,
                                               ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                vertical: 12,
+                                              decoration: BoxDecoration(
+                                                color: Colors.indigo
+                                                    .withOpacity(0.15),
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                              ),
+                                              child: Text(
+                                                data['category'] ??
+                                                    'Uncategorized',
+                                                style: TextStyle(
+                                                  fontSize:
+                                                      isSmallScreen ? 9 : 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Colors.indigo,
+                                                ),
                                               ),
                                             ),
-                                            onPressed: () {
-                                              Navigator.pushNamed(
-                                                context,
-                                                '/destination-details',
-                                                arguments: doc.id,
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: ElevatedButton.icon(
-                                            icon:
-                                                const Icon(Icons.edit_outlined),
-                                            label: const Text('Edit'),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.indigo,
-                                              foregroundColor: Colors.white,
-                                              elevation: 0,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
+
+                                            // Date with correct vertical alignment
+                                            if (formattedDate.isNotEmpty)
+                                              Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal:
+                                                      isSmallScreen ? 6 : 8,
+                                                  vertical: 3,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey[100],
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.calendar_today,
+                                                      size: isSmallScreen
+                                                          ? 9
+                                                          : 10,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                    const SizedBox(width: 3),
+                                                    Text(
+                                                      formattedDate,
+                                                      style: TextStyle(
+                                                        fontSize: isSmallScreen
+                                                            ? 9
+                                                            : 11,
+                                                        color: Colors.grey[700],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                vertical: 12,
-                                              ),
-                                            ),
-                                            onPressed: () {
-                                              Navigator.pushNamed(
-                                                context,
-                                                '/edit-destination',
-                                                arguments: doc.id,
-                                              );
-                                            },
-                                          ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ),
                                 ],
-                              ),
-                            ),
-                            crossFadeState: _expandedItems.contains(doc.id)
-                                ? CrossFadeState.showSecond
-                                : CrossFadeState.showFirst,
-                            duration: const Duration(milliseconds: 300),
+                              );
+                            },
                           ),
-                        ],
+                        ),
                       ),
                     );
                   },
