@@ -309,19 +309,20 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                       }
                     }
 
-                    // Updated destination card UI without redundant buttons
+                    // Refined destination card UI with improved typography
 
                     return Card(
-                      elevation: 1,
+                      elevation:
+                          2, // Slightly increased elevation for better depth
                       margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(
-                          color: Colors.grey.withOpacity(0.2),
+                          color: Colors.grey.withOpacity(0.15),
                           width: 1,
                         ),
                       ),
-                      clipBehavior: Clip.antiAlias, // Prevent child overflow
+                      clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         // Navigate to destination details on tap
                         onTap: () {
@@ -334,15 +335,18 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: isSmallScreen ? 10 : 16,
-                            vertical: isSmallScreen ? 12 : 16,
+                            horizontal: isSmallScreen ? 12 : 18,
+                            vertical:
+                                16, // Consistent vertical padding regardless of screen size
                           ),
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               // Responsive layout based on available width
                               final bool isNarrow = constraints.maxWidth < 400;
+
+                              // Increased image size for better visibility
                               final double imageSize =
-                                  isSmallScreen ? 60 : (isNarrow ? 70 : 80);
+                                  isSmallScreen ? 70 : (isNarrow ? 80 : 90);
 
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,19 +355,19 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                   Hero(
                                     tag: 'destination-${doc.id}',
                                     child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(12),
                                       child: Container(
                                         width: imageSize,
                                         height: imageSize,
                                         decoration: BoxDecoration(
                                           borderRadius:
-                                              BorderRadius.circular(10),
+                                              BorderRadius.circular(12),
                                           boxShadow: [
                                             BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.1),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
+                                              color: Colors.black
+                                                  .withOpacity(0.15),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 3),
                                             ),
                                           ],
                                         ),
@@ -398,7 +402,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                             strokeWidth: 2,
                                                             color: Colors.indigo
                                                                 .withOpacity(
-                                                                    0.5),
+                                                                    0.6),
                                                           ),
                                                         ),
                                                       );
@@ -410,7 +414,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                       child: Icon(
                                                         Icons
                                                             .image_not_supported,
-                                                        size: imageSize / 3,
+                                                        size: imageSize / 2.5,
                                                         color: Colors.grey[400],
                                                       ),
                                                     ),
@@ -419,12 +423,12 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                     color: Colors.grey[200],
                                                     child: Icon(
                                                       Icons.photo_outlined,
-                                                      size: imageSize / 3,
+                                                      size: imageSize / 2.5,
                                                       color: Colors.grey[400],
                                                     ),
                                                   ),
 
-                                            // Rating badge with improved position
+                                            // Rating badge with improved position and styling
                                             if (data['averageRating'] != null)
                                               Positioned(
                                                 bottom: 0,
@@ -432,8 +436,8 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                 child: Container(
                                                   padding: const EdgeInsets
                                                       .symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2,
+                                                    horizontal: 8,
+                                                    vertical: 4,
                                                   ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.amber
@@ -441,8 +445,17 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                     borderRadius:
                                                         const BorderRadius.only(
                                                       topLeft:
-                                                          Radius.circular(8),
+                                                          Radius.circular(10),
                                                     ),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black
+                                                            .withOpacity(0.15),
+                                                        blurRadius: 3,
+                                                        offset:
+                                                            const Offset(0, 1),
+                                                      ),
+                                                    ],
                                                   ),
                                                   child: Row(
                                                     mainAxisSize:
@@ -450,7 +463,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                     children: [
                                                       const Icon(
                                                         Icons.star,
-                                                        size: 12,
+                                                        size: 14,
                                                         color: Colors.white,
                                                       ),
                                                       const SizedBox(width: 2),
@@ -458,7 +471,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                         '${(data['averageRating'] as num? ?? 0).toStringAsFixed(1)}',
                                                         style: const TextStyle(
                                                           color: Colors.white,
-                                                          fontSize: 10,
+                                                          fontSize: 12,
                                                           fontWeight:
                                                               FontWeight.bold,
                                                         ),
@@ -473,7 +486,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                     ),
                                   ),
 
-                                  SizedBox(width: isSmallScreen ? 10 : 14),
+                                  SizedBox(width: isSmallScreen ? 12 : 16),
 
                                   // Content column with improved spacing and layout
                                   Expanded(
@@ -487,35 +500,41 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            // Title with overflow protection
+                                            // Title with improved typography
                                             Expanded(
                                               child: Text(
                                                 data['title'] ??
                                                     'Unknown Destination',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize:
-                                                      isSmallScreen ? 14 : 16,
-                                                  color: Colors.indigo,
+                                                  fontSize: isSmallScreen
+                                                      ? 16
+                                                      : 18, // Increased font size
+                                                  color: Colors.indigo
+                                                      .shade700, // Slightly darker for better contrast
                                                   height: 1.2,
+                                                  letterSpacing:
+                                                      -0.3, // Better readability for titles
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                                 maxLines: 2,
                                               ),
                                             ),
 
-                                            // More compact menu
+                                            // More visible menu button
                                             SizedBox(
                                               height: 36,
-                                              width: 30,
+                                              width:
+                                                  36, // Slightly wider for easier tapping
                                               child: PopupMenuButton<String>(
                                                 icon: const Icon(
                                                   Icons.more_vert,
-                                                  color: Colors.grey,
-                                                  size: 20,
+                                                  color: Colors.indigo,
+                                                  size: 22, // Larger icon
                                                 ),
                                                 padding: EdgeInsets.zero,
-                                                splashRadius: 20,
+                                                splashRadius:
+                                                    24, // Larger splash for better feedback
                                                 position:
                                                     PopupMenuPosition.under,
                                                 onSelected: (value) {
@@ -542,48 +561,55 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                   }
                                                 },
                                                 itemBuilder: (context) => [
-                                                  const PopupMenuItem(
+                                                  PopupMenuItem(
                                                     value: 'preview',
-                                                    height: 40,
+                                                    height:
+                                                        45, // Taller items for easier tapping
                                                     child: Row(
                                                       children: [
                                                         Icon(Icons.visibility,
-                                                            size: 18),
-                                                        SizedBox(width: 8),
-                                                        Text('Preview',
+                                                            size: 20,
+                                                            color: Colors.indigo
+                                                                .shade600),
+                                                        const SizedBox(
+                                                            width: 10),
+                                                        const Text('Preview',
                                                             style: TextStyle(
-                                                                fontSize: 14)),
+                                                                fontSize: 15)),
                                                       ],
                                                     ),
                                                   ),
-                                                  const PopupMenuItem(
+                                                  PopupMenuItem(
                                                     value: 'edit',
-                                                    height: 40,
+                                                    height: 45,
                                                     child: Row(
                                                       children: [
                                                         Icon(Icons.edit,
-                                                            size: 18),
-                                                        SizedBox(width: 8),
-                                                        Text('Edit',
+                                                            size: 20,
+                                                            color: Colors.indigo
+                                                                .shade600),
+                                                        const SizedBox(
+                                                            width: 10),
+                                                        const Text('Edit',
                                                             style: TextStyle(
-                                                                fontSize: 14)),
+                                                                fontSize: 15)),
                                                       ],
                                                     ),
                                                   ),
                                                   const PopupMenuItem(
                                                     value: 'delete',
-                                                    height: 40,
+                                                    height: 45,
                                                     child: Row(
                                                       children: [
                                                         Icon(Icons.delete,
-                                                            size: 18,
+                                                            size: 20,
                                                             color: Colors.red),
-                                                        SizedBox(width: 8),
+                                                        SizedBox(width: 10),
                                                         Text('Delete',
                                                             style: TextStyle(
                                                                 color:
                                                                     Colors.red,
-                                                                fontSize: 14)),
+                                                                fontSize: 15)),
                                                       ],
                                                     ),
                                                   ),
@@ -593,40 +619,48 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                           ],
                                         ),
 
-                                        // Brief description with proper spacing
+                                        const SizedBox(
+                                            height: 6), // Consistent spacing
+
+                                        // Brief description with larger text
                                         if (data['description'] != null &&
                                             data['description']
                                                 .toString()
                                                 .isNotEmpty)
                                           Padding(
                                             padding: const EdgeInsets.only(
-                                                top: 4, bottom: 6),
+                                                bottom: 8),
                                             child: Text(
                                               data['description'],
                                               style: TextStyle(
-                                                fontSize:
-                                                    isSmallScreen ? 12 : 13,
+                                                fontSize: isSmallScreen
+                                                    ? 13
+                                                    : 14.5, // Increased size
                                                 color: Colors.grey[800],
                                                 height: 1.3,
+                                                letterSpacing:
+                                                    0.1, // Better readability
                                               ),
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
 
-                                        // Location row with improved icon placement
+                                        // Location row with improved icon and text
                                         if (data['location'] != null)
                                           Padding(
                                             padding: const EdgeInsets.only(
-                                                bottom: 8),
+                                                bottom: 10),
                                             child: Row(
                                               crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                                  CrossAxisAlignment
+                                                      .center, // Better alignment
                                               children: [
                                                 Icon(
                                                   Icons.location_on,
-                                                  size: isSmallScreen ? 12 : 14,
-                                                  color: Colors.grey[600],
+                                                  size: isSmallScreen ? 14 : 16,
+                                                  color: Colors.orange[
+                                                      700], // More visible color
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Expanded(
@@ -634,9 +668,11 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                     data['location'],
                                                     style: TextStyle(
                                                       fontSize: isSmallScreen
-                                                          ? 11
-                                                          : 12,
+                                                          ? 12
+                                                          : 13.5, // Increased
                                                       color: Colors.grey[700],
+                                                      fontWeight: FontWeight
+                                                          .w400, // Slightly bolder
                                                     ),
                                                     maxLines: 1,
                                                     overflow:
@@ -647,49 +683,65 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                             ),
                                           ),
 
-                                        // Metadata row with better stacking for small screens
+                                        // Metadata row with better styling
                                         Wrap(
                                           spacing: 8,
-                                          runSpacing: 4,
+                                          runSpacing:
+                                              6, // More space between wrapped items
                                           alignment: WrapAlignment.start,
                                           children: [
-                                            // Category chip with improved style
-                                            Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal:
-                                                    isSmallScreen ? 6 : 8,
-                                                vertical: 3,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.indigo
-                                                    .withOpacity(0.15),
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                              ),
-                                              child: Text(
-                                                data['category'] ??
-                                                    'Uncategorized',
-                                                style: TextStyle(
-                                                  fontSize:
-                                                      isSmallScreen ? 9 : 11,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.indigo,
+                                            // Only show if category is not null and not empty
+                                            if (data['category'] != null &&
+                                                data['category']
+                                                    .toString()
+                                                    .isNotEmpty)
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 4,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.indigo
+                                                      .withOpacity(0.12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
+                                                  border: Border.all(
+                                                    color: Colors.indigo
+                                                        .withOpacity(0.3),
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  data['category'],
+                                                  style: TextStyle(
+                                                    fontSize: isSmallScreen
+                                                        ? 11
+                                                        : 12, // Increased
+                                                    fontWeight: FontWeight.w500,
+                                                    color:
+                                                        Colors.indigo.shade700,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
 
-                                            // Date with correct vertical alignment
+                                            // Date with improved styling
                                             if (formattedDate.isNotEmpty)
                                               Container(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal:
-                                                      isSmallScreen ? 6 : 8,
-                                                  vertical: 3,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 4,
                                                 ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.grey[100],
                                                   borderRadius:
                                                       BorderRadius.circular(50),
+                                                  border: Border.all(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.3),
+                                                    width: 1,
+                                                  ),
                                                 ),
                                                 child: Row(
                                                   mainAxisSize:
@@ -698,17 +750,17 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                     Icon(
                                                       Icons.calendar_today,
                                                       size: isSmallScreen
-                                                          ? 9
-                                                          : 10,
+                                                          ? 10
+                                                          : 12, // Increased
                                                       color: Colors.grey[600],
                                                     ),
-                                                    const SizedBox(width: 3),
+                                                    const SizedBox(width: 4),
                                                     Text(
                                                       formattedDate,
                                                       style: TextStyle(
                                                         fontSize: isSmallScreen
-                                                            ? 9
-                                                            : 11,
+                                                            ? 11
+                                                            : 12, // Increased
                                                         color: Colors.grey[700],
                                                       ),
                                                     ),
