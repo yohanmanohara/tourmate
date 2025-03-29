@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/auth_services.dart';
 import '../../services/firestore_service.dart';
+import '../../widgets/admin_bottom_menu.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -74,6 +75,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final bool isSmallScreen = screenSize.width < 360;
     final double horizontalPadding = isSmallScreen ? 12.0 : 16.0;
 
+    // Define the primary indigo color to match manage destinations screen
+    final Color primaryIndigo = Colors.indigo;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -84,7 +88,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             fontSize: 24.0,
           ),
         ),
-        backgroundColor: Colors.indigoAccent,
+        backgroundColor: primaryIndigo,
         elevation: 4,
         actions: [
           IconButton(
@@ -108,10 +112,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
       body: SafeArea(
         child: _isLoading
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(Colors.indigoAccent),
+                  valueColor: AlwaysStoppedAnimation<Color>(primaryIndigo),
                 ),
               )
             : SingleChildScrollView(
@@ -145,7 +148,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                       const SizedBox(height: 10),
 
-                      // Dashboard statistics cards - Now using real data
+                      // Dashboard statistics cards - Now using real data with indigo color
                       Wrap(
                         spacing: isSmallScreen ? 6 : 8,
                         runSpacing: isSmallScreen ? 6 : 8,
@@ -155,10 +158,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               'Destinations',
                               _stats['totalDestinations'],
                               Icons.map,
-                              Colors.blueAccent,
+                              primaryIndigo,
                               screenSize),
                           _buildDashboardCard('Users', _stats['totalUsers'],
-                              Icons.people, Colors.indigoAccent, screenSize),
+                              Icons.people, primaryIndigo, screenSize),
                           _buildDashboardCard('Reviews', _stats['totalReviews'],
                               Icons.star, Colors.orangeAccent, screenSize),
                         ],
@@ -212,7 +215,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 'Admin Users',
                                 _stats['adminCount'],
                                 _stats['totalUsers'],
-                                Colors.indigoAccent,
+                                primaryIndigo,
                               ),
                               const SizedBox(height: 12),
                               _buildUserTypeIndicator(
@@ -249,7 +252,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 'Manage Destinations',
                                 '${_stats['totalDestinations']} destinations',
                                 Icons.map,
-                                Colors.blueAccent,
+                                primaryIndigo,
                                 '/manage-destinations',
                                 isSmallScreen),
                             const Divider(),
@@ -258,7 +261,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 'Manage Users',
                                 '${_stats['totalUsers']} users',
                                 Icons.people,
-                                Colors.indigoAccent,
+                                primaryIndigo,
                                 '/manage-users',
                                 isSmallScreen),
                             const Divider(),
@@ -296,7 +299,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           _buildActionButton(
                             Icons.add_location,
                             'Add Destination',
-                            Colors.blueAccent,
+                            primaryIndigo,
                             isSmallScreen,
                             onTap: () => Navigator.pushNamed(
                                 context, '/edit-destination'),
@@ -304,7 +307,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           _buildActionButton(
                             Icons.person_add,
                             'Add User',
-                            Colors.indigoAccent,
+                            primaryIndigo,
                             isSmallScreen,
                             onTap: () =>
                                 Navigator.pushNamed(context, '/manage-users'),
@@ -336,48 +339,45 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
       ),
 
-      // Enhanced Bottom Navigation Bar
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        elevation: 8,
-        notchMargin: 6,
-        shape: const CircularNotchedRectangle(),
-        child: Container(
-          height: isSmallScreen ? 50 : 60,
-          padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 5 : 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Expanded(
-                  child: _buildNavBarItem(
-                      0, Icons.dashboard, 'Dashboard', isSmallScreen)),
-              Expanded(
-                  child:
-                      _buildNavBarItem(1, Icons.map, 'Places', isSmallScreen)),
-              // Larger space for FAB on smaller screens
-              SizedBox(width: isSmallScreen ? 40 : 30),
-              Expanded(
-                  child: _buildNavBarItem(
-                      2, Icons.people, 'Users', isSmallScreen)),
-              Expanded(
-                  child: _buildNavBarItem(
-                      3, Icons.account_circle, 'Profile', isSmallScreen)),
-            ],
-          ),
-        ),
+      // Replace existing bottomNavigationBar with our new component
+      bottomNavigationBar: AdminBottomMenu(
+        currentIndex: _selectedIndex,
+        onIndexChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+
+          // Handle navigation based on selected index
+          switch (index) {
+            case 0: // Already on Dashboard
+              break;
+            case 1: // Destinations
+              Navigator.pushReplacementNamed(context, '/manage-destinations');
+              break;
+            case 2: // Users
+              Navigator.pushReplacementNamed(context, '/manage-users');
+              break;
+            case 3: // Analytics
+              Navigator.pushReplacementNamed(context, '/analytics');
+              break;
+          }
+        },
       ),
 
-      // Responsive floating action button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to analytics or add new content
-          Navigator.pushNamed(context, '/analytics');
+          // Action varies based on current screen
+          if (_selectedIndex == 1) {
+            Navigator.pushNamed(context, '/edit-destination');
+          } else if (_selectedIndex == 2) {
+            Navigator.pushNamed(context, '/add-user');
+          } else {
+            Navigator.pushNamed(context, '/analytics');
+          }
         },
-        backgroundColor: Colors.indigoAccent,
-        elevation: 4,
-        // Adjust the size for smaller screens
-        mini: isSmallScreen,
+        backgroundColor: primaryIndigo,
         child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add New',
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
@@ -416,7 +416,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // Enhanced navbar item for better responsiveness
+  // Enhanced navbar item for better responsiveness with indigo color
   Widget _buildNavBarItem(
       int index, IconData icon, String label, bool isSmall) {
     bool isSelected = _selectedIndex == index;
@@ -455,14 +455,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.indigoAccent : Colors.grey,
+              color: isSelected ? Colors.indigo : Colors.grey,
               size: isSmall ? 20 : 24,
             ),
             Text(
               label,
               style: TextStyle(
                 fontSize: isSmall ? 10 : 12,
-                color: isSelected ? Colors.indigoAccent : Colors.grey,
+                color: isSelected ? Colors.indigo : Colors.grey,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               overflow: TextOverflow.ellipsis,
@@ -473,7 +473,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  // Enhanced dashboard card for better responsiveness
+  // Enhanced dashboard card for better responsiveness with updated color
   Widget _buildDashboardCard(
       String title, int count, IconData icon, Color color, Size screenSize) {
     final bool isSmall = screenSize.width < 360;

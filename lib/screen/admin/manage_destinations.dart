@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../widgets/admin_bottom_menu.dart';
 
 class ManageDestinationsScreen extends StatefulWidget {
   const ManageDestinationsScreen({Key? key}) : super(key: key);
@@ -23,6 +24,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
     'Adventure'
   ];
   final Set<String> _expandedItems = {};
+  int _selectedIndex = 1; // Set to 1 for Destinations tab
 
   @override
   Widget build(BuildContext context) {
@@ -832,16 +834,38 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+
+      // Replace the existing floatingActionButton with our consistent bottom menu pattern
+      bottomNavigationBar: AdminBottomMenu(
+        currentIndex: _selectedIndex,
+        onIndexChanged: (index) {
+          if (index == _selectedIndex) return;
+
+          switch (index) {
+            case 0: // Dashboard
+              Navigator.pushReplacementNamed(context, '/admin-dashboard');
+              break;
+            case 1: // Already on Destinations
+              break;
+            case 2: // Users
+              Navigator.pushReplacementNamed(context, '/manage-users');
+              break;
+            case 3: // Analytics
+              Navigator.pushReplacementNamed(context, '/analytics');
+              break;
+          }
+        },
+      ),
+
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(context, '/edit-destination');
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Destination'),
-        tooltip: 'Add New Destination',
         backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
+        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add New Destination',
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
