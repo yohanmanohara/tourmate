@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../widgets/admin_bottom_menu.dart';
 
 class ManageDestinationsScreen extends StatefulWidget {
   const ManageDestinationsScreen({Key? key}) : super(key: key);
@@ -23,29 +24,35 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
     'Adventure'
   ];
   final Set<String> _expandedItems = {};
+  int _selectedIndex = 1; // Set to 1 for Destinations tab
 
   @override
   Widget build(BuildContext context) {
     final destinationsRef =
         FirebaseFirestore.instance.collection('destinations');
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Manage Destinations',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
+        backgroundColor: Colors.indigo,
         actions: [
           IconButton(
-            icon: const Icon(Icons.sort),
+            icon: const Icon(Icons.sort, color: Colors.white),
             tooltip: 'Sort destinations',
             onPressed: () {
               _showSortOptionsDialog(context);
             },
           ),
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list, color: Colors.white),
             tooltip: 'Filter by category',
             onPressed: () {
               _showFilterDialog(context);
@@ -55,50 +62,123 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
       ),
       body: Column(
         children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search destinations...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+          // Stats and search bar container
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
-                filled: true,
-                fillColor: Colors.grey[100],
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.toLowerCase();
-                });
-              },
+              ],
             ),
-          ),
-
-          // Category filter chips
-          if (!isSmallScreen)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: _categories.map((category) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(category),
-                      selected: _filterCategory == category,
-                      onSelected: (selected) {
-                        setState(() {
-                          _filterCategory = selected ? category : 'All';
-                        });
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title and search bar
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search destinations...',
+                          prefixIcon:
+                              const Icon(Icons.search, color: Colors.grey),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 0),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value.toLowerCase();
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    StreamBuilder<QuerySnapshot>(
+                      stream: destinationsRef.snapshots(),
+                      builder: (context, snapshot) {
+                        final count =
+                            snapshot.hasData ? snapshot.data!.docs.length : 0;
+                        return Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.indigo.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '$count',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                              const Text(
+                                'Total',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
                       },
                     ),
-                  );
-                }).toList(),
-              ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+                // Category filter chips
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: _categories.map((category) {
+                      final isSelected = _filterCategory == category;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(category),
+                          selected: isSelected,
+                          showCheckmark: false,
+                          backgroundColor: Colors.grey[100],
+                          selectedColor: Colors.indigo.withOpacity(0.2),
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.indigo : Colors.black87,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                          side: BorderSide(
+                            color:
+                                isSelected ? Colors.indigo : Colors.transparent,
+                          ),
+                          onSelected: (selected) {
+                            setState(() {
+                              _filterCategory = selected ? category : 'All';
+                            });
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
             ),
+          ),
 
           // Destinations list
           Expanded(
@@ -108,7 +188,11 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.indigo),
+                    ),
+                  );
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -117,17 +201,30 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.location_off,
-                            size: 64, color: Colors.grey[400]),
+                            size: 80, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         const Text(
                           'No destinations found',
                           style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                              fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
-                        TextButton.icon(
+                        const Text(
+                          'Get started by adding your first destination',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
                           icon: const Icon(Icons.add),
-                          label: const Text('Add your first destination'),
+                          label: const Text('Add Destination'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.indigo,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                          ),
                           onPressed: () {
                             Navigator.pushNamed(context, '/edit-destination');
                           },
@@ -166,10 +263,21 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                         Icon(Icons.search_off,
                             size: 64, color: Colors.grey[400]),
                         const SizedBox(height: 16),
-                        const Text('No matching destinations found'),
+                        const Text(
+                          'No matching destinations found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        OutlinedButton(
-                          child: const Text('Clear filters'),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.clear),
+                          label: const Text('Clear filters'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.indigo.withOpacity(0.1),
+                            foregroundColor: Colors.indigo,
+                          ),
                           onPressed: () {
                             setState(() {
                               _searchQuery = '';
@@ -202,12 +310,14 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                     }
 
                     return Card(
-                      elevation: 2, // Lower elevation for modern flat design
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 4),
+                      elevation: 1,
+                      margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(16), // More rounded corners
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: Colors.grey.withOpacity(0.2),
+                          width: 1,
+                        ),
                       ),
                       child: Column(
                         children: [
@@ -222,8 +332,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                 }
                               });
                             },
-                            borderRadius:
-                                BorderRadius.circular(16), // Match card shape
+                            borderRadius: BorderRadius.circular(16),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: LayoutBuilder(
@@ -247,25 +356,25 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                 children: [
                                                   Image.network(
                                                     data['images']?[0] ?? '',
-                                                    width: isNarrow ? 60 : 80,
-                                                    height: isNarrow ? 60 : 80,
+                                                    width: isNarrow ? 70 : 90,
+                                                    height: isNarrow ? 70 : 90,
                                                     fit: BoxFit.cover,
                                                     errorBuilder:
                                                         (_, __, ___) =>
                                                             Container(
-                                                      width: isNarrow ? 60 : 80,
+                                                      width: isNarrow ? 70 : 90,
                                                       height:
-                                                          isNarrow ? 60 : 80,
+                                                          isNarrow ? 70 : 90,
                                                       color: Colors.grey[200],
-                                                      child: Icon(
-                                                          Icons
-                                                              .image_not_supported,
-                                                          size: 24,
-                                                          color:
-                                                              Colors.grey[500]),
+                                                      child: const Icon(
+                                                        Icons
+                                                            .image_not_supported,
+                                                        size: 24,
+                                                        color: Colors.grey,
+                                                      ),
                                                     ),
                                                   ),
-                                                  // Optional: Add a subtle gradient overlay for better text contrast
+                                                  // Rating badge
                                                   if (data['averageRating'] !=
                                                       null)
                                                     Positioned(
@@ -280,8 +389,9 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                         ),
                                                         decoration:
                                                             BoxDecoration(
-                                                          color: Colors.blue
-                                                              .withOpacity(0.8),
+                                                          color: Colors.indigo
+                                                              .withOpacity(
+                                                                  0.85),
                                                           borderRadius:
                                                               const BorderRadius
                                                                   .only(
@@ -298,7 +408,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                               Icons.star,
                                                               size: 14,
                                                               color:
-                                                                  Colors.white,
+                                                                  Colors.amber,
                                                             ),
                                                             const SizedBox(
                                                                 width: 2),
@@ -340,14 +450,11 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                       child: Text(
                                                         data['title'] ??
                                                             'Unknown',
-                                                        style: TextStyle(
+                                                        style: const TextStyle(
                                                           fontWeight:
                                                               FontWeight.bold,
-                                                          fontSize: isNarrow
-                                                              ? 16
-                                                              : 18,
-                                                          color: Colors
-                                                              .blueGrey[800],
+                                                          fontSize: 17,
+                                                          color: Colors.indigo,
                                                         ),
                                                         overflow: TextOverflow
                                                             .ellipsis,
@@ -359,7 +466,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                     PopupMenuButton<String>(
                                                       icon: const Icon(
                                                         Icons.more_vert,
-                                                        color: Colors.blueGrey,
+                                                        color: Colors.grey,
                                                       ),
                                                       onSelected: (value) {
                                                         if (value == 'edit') {
@@ -451,26 +558,20 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                         vertical: 4,
                                                       ),
                                                       decoration: BoxDecoration(
-                                                        color: Colors.blue
+                                                        color: Colors.indigo
                                                             .withOpacity(0.15),
                                                         borderRadius:
                                                             BorderRadius
                                                                 .circular(50),
-                                                        border: Border.all(
-                                                          color: Colors.blue
-                                                              .withOpacity(0.3),
-                                                          width: 1,
-                                                        ),
                                                       ),
                                                       child: Text(
                                                         data['category'] ??
                                                             'Uncategorized',
-                                                        style: TextStyle(
+                                                        style: const TextStyle(
                                                           fontSize: 12,
                                                           fontWeight:
                                                               FontWeight.w500,
-                                                          color:
-                                                              Colors.blue[700],
+                                                          color: Colors.indigo,
                                                         ),
                                                       ),
                                                     ),
@@ -561,7 +662,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.blueGrey,
+                                            color: Colors.indigo,
                                           ),
                                         ),
                                         const SizedBox(height: 8),
@@ -570,7 +671,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                               'No description available',
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: Colors.blueGrey[700],
+                                            color: Colors.grey[800],
                                             height: 1.4,
                                           ),
                                         ),
@@ -596,11 +697,57 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                               data['location'],
                                               style: TextStyle(
                                                 fontSize: 13,
-                                                color: Colors.blueGrey[600],
+                                                color: Colors.grey[800],
                                               ),
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
                                             ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                  // Features (if available)
+                                  if (data['features'] != null &&
+                                      (data['features'] as List).isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          16, 8, 16, 8),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Features',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.indigo,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Wrap(
+                                            spacing: 8,
+                                            runSpacing: 8,
+                                            children: (data['features'] as List)
+                                                .map<Widget>((feature) {
+                                              return Chip(
+                                                label: Text(
+                                                  feature,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                                backgroundColor:
+                                                    Colors.grey[100],
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                ),
+                                                visualDensity:
+                                                    VisualDensity.compact,
+                                              );
+                                            }).toList(),
                                           ),
                                         ],
                                       ),
@@ -617,9 +764,9 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                 Icons.visibility_outlined),
                                             label: const Text('Preview'),
                                             style: OutlinedButton.styleFrom(
-                                              foregroundColor: Colors.blue[700],
-                                              side: BorderSide(
-                                                  color: Colors.blue.shade300),
+                                              foregroundColor: Colors.indigo,
+                                              side: const BorderSide(
+                                                  color: Colors.indigo),
                                               shape: RoundedRectangleBorder(
                                                 borderRadius:
                                                     BorderRadius.circular(8),
@@ -645,7 +792,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
                                                 const Icon(Icons.edit_outlined),
                                             label: const Text('Edit'),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.blue,
+                                              backgroundColor: Colors.indigo,
                                               foregroundColor: Colors.white,
                                               elevation: 0,
                                               shape: RoundedRectangleBorder(
@@ -687,14 +834,38 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+
+      // Replace the existing floatingActionButton with our consistent bottom menu pattern
+      bottomNavigationBar: AdminBottomMenu(
+        currentIndex: _selectedIndex,
+        onIndexChanged: (index) {
+          if (index == _selectedIndex) return;
+
+          switch (index) {
+            case 0: // Dashboard
+              Navigator.pushReplacementNamed(context, '/admin-dashboard');
+              break;
+            case 1: // Already on Destinations
+              break;
+            case 2: // Users
+              Navigator.pushReplacementNamed(context, '/manage-users');
+              break;
+            case 3: // Analytics
+              Navigator.pushReplacementNamed(context, '/analytics');
+              break;
+          }
+        },
+      ),
+
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(context, '/edit-destination');
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Destination'),
+        backgroundColor: Colors.indigo,
+        child: const Icon(Icons.add, color: Colors.white),
         tooltip: 'Add New Destination',
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -769,6 +940,7 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
               return RadioListTile<String>(
                 title: Text(category),
                 value: category,
+                activeColor: Colors.indigo,
                 groupValue: _filterCategory,
                 onChanged: (value) {
                   setState(() {
@@ -801,28 +973,52 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
               // Implement sorting logic
               Navigator.pop(context);
             },
-            child: const Text('Newest First'),
+            child: const Row(
+              children: [
+                Icon(Icons.arrow_downward, size: 20, color: Colors.indigo),
+                SizedBox(width: 12),
+                Text('Newest First'),
+              ],
+            ),
           ),
           SimpleDialogOption(
             onPressed: () {
               // Implement sorting logic
               Navigator.pop(context);
             },
-            child: const Text('Oldest First'),
+            child: const Row(
+              children: [
+                Icon(Icons.arrow_upward, size: 20, color: Colors.indigo),
+                SizedBox(width: 12),
+                Text('Oldest First'),
+              ],
+            ),
           ),
           SimpleDialogOption(
             onPressed: () {
               // Implement sorting logic
               Navigator.pop(context);
             },
-            child: const Text('Name (A-Z)'),
+            child: const Row(
+              children: [
+                Icon(Icons.sort_by_alpha, size: 20, color: Colors.indigo),
+                SizedBox(width: 12),
+                Text('Name (A-Z)'),
+              ],
+            ),
           ),
           SimpleDialogOption(
             onPressed: () {
               // Implement sorting logic
               Navigator.pop(context);
             },
-            child: const Text('Name (Z-A)'),
+            child: const Row(
+              children: [
+                Icon(Icons.sort_by_alpha, size: 20, color: Colors.indigo),
+                SizedBox(width: 12),
+                Text('Name (Z-A)'),
+              ],
+            ),
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context),

@@ -12,6 +12,7 @@ import './screen/main_layout.dart';
 import './screen/admin/manage_destinations.dart';
 import './screen/admin/edit_destination.dart';
 import './screen/admin/destination_details.dart';
+import './screen/admin/manage_users.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const MainLayout(),
         '/admin-dashboard': (context) => const AdminDashboardScreen(),
         '/manage-destinations': (context) => const ManageDestinationsScreen(),
+        '/manage-users': (context) => const ManageUsersScreen(),
         '/edit-destination': (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           return EditDestinationScreen(
