@@ -88,7 +88,7 @@ class _ARMapScreenState extends State<ARMapScreen> {
   }
 
   void _viewDestinationDetails(String id) {
-    Navigator.pushNamed(context, '/destination-details', arguments: id);
+    Navigator.pushNamed(context, '/user-destination-details', arguments: id);
   }
 
   @override
