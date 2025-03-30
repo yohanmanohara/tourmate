@@ -13,6 +13,7 @@ import './screen/admin/manage_destinations.dart';
 import './screen/admin/edit_destination.dart';
 import './screen/admin/destination_details.dart';
 import './screen/admin/manage_users.dart';
+import './screen/destination_details_user.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,17 @@ class MyApp extends StatelessWidget {
             body: const Center(child: Text('Invalid destination ID')),
           );
         },
+        '/user-destination-details': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is String) {
+            return UserDestinationDetailsScreen(destinationId: args);
+          }
+          // Handle error case
+          return Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: const Center(child: Text('Invalid destination ID')),
+          );
+        }
         // Add other routes as needed
       },
     );
