@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class UserDestinationDetailsScreen extends StatefulWidget {
   final String destinationId;
@@ -28,11 +29,100 @@ class _UserDestinationDetailsScreenState
   final ScrollController _scrollController = ScrollController();
   final PageController _pageController = PageController();
   bool _isFavorite = false;
+  final TextEditingController _reviewController = TextEditingController();
+  double _rating = 0.0; // Initialize _rating with a default value
+
+  void _submitReview() async {
+    // Validate rating
+    if (_rating == 0.0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add a rating before submitting.')),
+      );
+      return;
+    }
+
+    final reviewText = _reviewController.text.trim();
+    if (reviewText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Please write a review before submitting.')),
+      );
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // Update the destination's average rating
+      final destinationRef = FirebaseFirestore.instance
+          .collection('destinations')
+          .doc(widget.destinationId);
+
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final destinationDoc = await transaction.get(destinationRef);
+
+        if (!destinationDoc.exists) {
+          throw Exception('Destination not found');
+        }
+
+        // Calculate new average rating
+        final currentRating = destinationDoc.data()?['averageRating'] ?? 0.0;
+        final totalReviews = destinationDoc.data()?['totalReviews'] ?? 0;
+        final newTotalReviews = totalReviews + 1;
+        final newAverageRating =
+            ((currentRating * totalReviews) + _rating) / newTotalReviews;
+
+        // Update destination document
+        transaction.update(destinationRef, {
+          'averageRating': newAverageRating,
+          'totalReviews': newTotalReviews,
+        });
+
+        // Add the review
+        final reviewRef =
+            FirebaseFirestore.instance.collection('reviews').doc();
+        transaction.set(reviewRef, {
+          'destinationId': widget.destinationId,
+          'review': reviewText,
+          'rating': _rating,
+          'timestamp': Timestamp.now(),
+          'userName': 'Anonymous',
+        });
+      });
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review submitted successfully!')),
+      );
+
+      // Clear form
+      setState(() {
+        _rating = 0.0;
+        _reviewController.clear();
+      });
+    } catch (error) {
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit review: $error')),
+      );
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _loadDestinationData();
   }
 
@@ -40,7 +130,8 @@ class _UserDestinationDetailsScreenState
   void dispose() {
     _tabController.dispose();
     _scrollController.dispose();
-    _pageController.dispose();
+    _reviewController.dispose();
+    super.dispose();
     super.dispose();
   }
 
@@ -588,6 +679,7 @@ class _UserDestinationDetailsScreenState
                       Tab(text: "Overview"),
                       Tab(text: "Features"),
                       Tab(text: "Location"),
+                      Tab(text: "Reviews"),
                     ],
                   ),
                 ),
@@ -905,6 +997,229 @@ class _UserDestinationDetailsScreenState
                   ],
                 ),
               ),
+
+              // Reviews Tab
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Reviews',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Rate this place',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        RatingBar.builder(
+                          initialRating: _rating, // Change from 0 to _rating
+                          minRating: 1,
+                          direction: Axis.horizontal,
+                          allowHalfRating: true,
+                          itemCount: 5,
+                          itemPadding:
+                              const EdgeInsets.symmetric(horizontal: 4.0),
+                          itemBuilder: (context, _) => const Icon(
+                            Icons.star,
+                            color: Colors.amber,
+                          ),
+                          onRatingUpdate: (rating) {
+                            setState(() {
+                              _rating = rating;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _reviewController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: 'Write your review...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _submitReview,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryColor,
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                child: const Text('Submit'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _rating = 0.0;
+                                    _reviewController.clear();
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text('Rating and review cleared'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: primaryColor,
+                                  side: BorderSide(color: primaryColor),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                child: const Text('Clear'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'User Reviews',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        StreamBuilder(
+                          stream: FirebaseFirestore.instance
+                              .collection('reviews')
+                              .where('destinationId',
+                                  isEqualTo: widget
+                                      .destinationId) // Filter by destinationId
+                              .orderBy('timestamp', descending: true)
+                              .snapshots(),
+                          builder:
+                              (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                            if (!snapshot.hasData) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                            final reviews = snapshot.data!.docs;
+
+                            if (reviews.isEmpty) {
+                              return Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.rate_review_outlined,
+                                          size: 48, color: Colors.grey[400]),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'No reviews yet. Be the first to review!',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 16,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: reviews.length,
+                              itemBuilder: (context, index) {
+                                final review = reviews[index];
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            RatingBar.builder(
+                                              initialRating: review['rating']
+                                                      ?.toDouble() ??
+                                                  0.0,
+                                              minRating: 1,
+                                              direction: Axis.horizontal,
+                                              allowHalfRating: true,
+                                              itemCount: 5,
+                                              itemSize: 16,
+                                              ignoreGestures: true,
+                                              itemBuilder: (context, _) =>
+                                                  const Icon(
+                                                Icons.star,
+                                                color: Colors.amber,
+                                              ),
+                                              onRatingUpdate: (_) {},
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              review['rating']?.toString() ??
+                                                  '0.0',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          review['review'],
+                                          style: TextStyle(
+                                            color: Colors.grey[800],
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          _formatTimestamp(review['timestamp']),
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 100), // Bottom padding
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -963,4 +1278,10 @@ class _UserDestinationDetailsScreenState
       ),
     );
   }
+}
+
+String _formatTimestamp(Timestamp? timestamp) {
+  if (timestamp == null) return '';
+  final date = timestamp.toDate();
+  return '${date.day}/${date.month}/${date.year}';
 }
