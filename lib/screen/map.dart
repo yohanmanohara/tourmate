@@ -3,6 +3,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:location/location.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:math';
+import '../services/directions_service.dart'; // Add this import
 
 class ARMapScreen extends StatefulWidget {
   const ARMapScreen({Key? key}) : super(key: key);
@@ -16,6 +21,19 @@ class _ARMapScreenState extends State<ARMapScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _destinations = [];
   String _selectedCategoryFilter = 'All';
+
+  // Current location properties
+  final Location _locationService = Location();
+  LocationData? _currentLocation;
+  bool _isGettingLocation = false;
+
+  // Directions properties
+  final Dio _dio = Dio();
+  List<LatLng> _polylineCoordinates = [];
+  bool _isCalculatingRoute = false;
+  Map<String, dynamic>? _selectedDestination;
+  double _routeDistance = 0;
+  double _routeDuration = 0;
 
   // List of category filters
   final List<String> _categories = [
@@ -31,6 +49,80 @@ class _ARMapScreenState extends State<ARMapScreen> {
   void initState() {
     super.initState();
     _loadDestinations();
+    _initializeLocationService();
+  }
+
+  Future<void> _initializeLocationService() async {
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+
+    // Check if location service is enabled
+    serviceEnabled = await _locationService.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await _locationService.requestService();
+      if (!serviceEnabled) {
+        return;
+      }
+    }
+
+    // Check if location permission is granted
+    permissionGranted = await _locationService.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await _locationService.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    // Get current location
+    _getCurrentLocation();
+
+    // Subscribe to location changes
+    _locationService.onLocationChanged.listen((LocationData locationData) {
+      if (mounted) {
+        setState(() {
+          _currentLocation = locationData;
+
+          // If route is active, update route
+          if (_selectedDestination != null && _polylineCoordinates.isNotEmpty) {
+            _getDirections();
+          }
+        });
+      }
+    });
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      _isGettingLocation = true;
+    });
+
+    try {
+      final locationData = await _locationService.getLocation();
+      if (mounted) {
+        setState(() {
+          _currentLocation = locationData;
+          _isGettingLocation = false;
+
+          // Center map on current location
+          if (_currentLocation != null) {
+            _mapController.move(
+              LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!),
+              14.0,
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isGettingLocation = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error getting location: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _loadDestinations() async {
@@ -91,6 +183,80 @@ class _ARMapScreenState extends State<ARMapScreen> {
     Navigator.pushNamed(context, '/user-destination-details', arguments: id);
   }
 
+  Future<void> _getDirections() async {
+    if (_currentLocation == null || _selectedDestination == null) {
+      return;
+    }
+
+    setState(() {
+      _isCalculatingRoute = true;
+      _polylineCoordinates = [];
+    });
+
+    try {
+      final origin = LatLng(
+        _currentLocation!.latitude!,
+        _currentLocation!.longitude!,
+      );
+
+      final destination = LatLng(
+        _selectedDestination!['latitude'],
+        _selectedDestination!['longitude'],
+      );
+
+      final directions = await DirectionsService.getDirections(
+        origin: origin,
+        destination: destination,
+      );
+
+      if (directions != null) {
+        setState(() {
+          _polylineCoordinates = directions['polyline'];
+          _routeDistance = directions['distance'];
+          _routeDuration = directions['duration'];
+          _isCalculatingRoute = false;
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not find a route')),
+          );
+          setState(() {
+            _isCalculatingRoute = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error calculating route: $e')),
+        );
+        setState(() {
+          _isCalculatingRoute = false;
+        });
+      }
+    }
+  }
+
+  void _clearRoute() {
+    setState(() {
+      _polylineCoordinates = [];
+      _selectedDestination = null;
+      _routeDistance = 0;
+      _routeDuration = 0;
+    });
+  }
+
+  String _formatDuration(double minutes) {
+    if (minutes < 60) {
+      return '${minutes.round()} min';
+    } else {
+      final hours = (minutes / 60).floor();
+      final remainingMinutes = (minutes % 60).round();
+      return '$hours h ${remainingMinutes > 0 ? '$remainingMinutes min' : ''}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Define the primary indigo color to match other admin screens
@@ -118,6 +284,11 @@ class _ARMapScreenState extends State<ARMapScreen> {
             icon: const Icon(Icons.refresh, color: Colors.white),
             tooltip: 'Refresh destinations',
             onPressed: _loadDestinations,
+          ),
+          IconButton(
+            icon: const Icon(Icons.my_location, color: Colors.white),
+            tooltip: 'My location',
+            onPressed: _getCurrentLocation,
           ),
         ],
       ),
@@ -222,8 +393,56 @@ class _ARMapScreenState extends State<ARMapScreen> {
                                 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                             subdomains: const ['a', 'b', 'c'],
                           ),
+
+                          // Route polyline
+                          if (_polylineCoordinates.isNotEmpty)
+                            PolylineLayer(
+                              polylines: [
+                                Polyline(
+                                  points: _polylineCoordinates,
+                                  color: Colors.blue,
+                                  strokeWidth: 4.0,
+                                ),
+                              ],
+                            ),
+
+                          // Current location marker
+                          if (_currentLocation != null)
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  width: 30.0,
+                                  height: 30.0,
+                                  point: LatLng(
+                                    _currentLocation!.latitude!,
+                                    _currentLocation!.longitude!,
+                                  ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withOpacity(0.7),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.my_location,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                          // Destination markers
                           MarkerLayer(
                             markers: filteredDestinations.map((destination) {
+                              final isSelected = _selectedDestination != null &&
+                                  _selectedDestination!['id'] ==
+                                      destination['id'];
+
                               return Marker(
                                 width: 120.0,
                                 height: 70.0,
@@ -242,8 +461,9 @@ class _ARMapScreenState extends State<ARMapScreen> {
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color:
-                                              primaryIndigo.withOpacity(0.85),
+                                          color: isSelected
+                                              ? Colors.blue.withOpacity(0.85)
+                                              : primaryIndigo.withOpacity(0.85),
                                           borderRadius:
                                               BorderRadius.circular(12),
                                           boxShadow: [
@@ -266,9 +486,11 @@ class _ARMapScreenState extends State<ARMapScreen> {
                                           textAlign: TextAlign.center,
                                         ),
                                       ),
-                                      const Icon(
+                                      Icon(
                                         Icons.location_on,
-                                        color: Colors.red,
+                                        color: isSelected
+                                            ? Colors.blue
+                                            : Colors.red,
                                         size: 30.0,
                                       ),
                                     ],
@@ -315,23 +537,185 @@ class _ARMapScreenState extends State<ARMapScreen> {
                         ),
                       ),
 
-                      // Center on Sri Lanka button
+                      // Location and center buttons
                       Positioned(
                         left: 16,
                         bottom: 100,
-                        child: FloatingActionButton.small(
-                          heroTag: 'centerSriLanka',
-                          onPressed: () {
-                            _mapController.move(
-                              LatLng(7.8731, 80.7718),
-                              7.0,
-                            );
-                          },
-                          backgroundColor: Colors.white,
-                          foregroundColor: primaryIndigo,
-                          child: const Icon(Icons.my_location),
+                        child: Column(
+                          children: [
+                            FloatingActionButton.small(
+                              heroTag: 'myLocation',
+                              onPressed: () {
+                                if (_currentLocation != null) {
+                                  _mapController.move(
+                                    LatLng(
+                                      _currentLocation!.latitude!,
+                                      _currentLocation!.longitude!,
+                                    ),
+                                    14.0,
+                                  );
+                                } else {
+                                  _getCurrentLocation();
+                                }
+                              },
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.blue,
+                              child: const Icon(Icons.my_location),
+                            ),
+                            const SizedBox(height: 8),
+                            FloatingActionButton.small(
+                              heroTag: 'centerSriLanka',
+                              onPressed: () {
+                                _mapController.move(
+                                  LatLng(7.8731, 80.7718),
+                                  7.0,
+                                );
+                              },
+                              backgroundColor: Colors.white,
+                              foregroundColor: primaryIndigo,
+                              child: const Icon(Icons.public),
+                            ),
+                          ],
                         ),
                       ),
+
+                      // Route information card
+                      if (_polylineCoordinates.isNotEmpty &&
+                          _selectedDestination != null)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          right: 8,
+                          child: Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.directions,
+                                          color: Colors.blue),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Directions to ${_selectedDestination!['title']}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: _clearRoute,
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Column(
+                                        children: [
+                                          const Text(
+                                            'Distance',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${_routeDistance.toStringAsFixed(1)} km',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        children: [
+                                          const Text(
+                                            'Duration',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          Text(
+                                            _formatDuration(_routeDuration),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Loading indicators
+                      if (_isGettingLocation || _isCalculatingRoute)
+                        Positioned(
+                          top: 70,
+                          right: 16,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      _isCalculatingRoute
+                                          ? Colors.blue
+                                          : primaryIndigo,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _isCalculatingRoute
+                                      ? 'Calculating route...'
+                                      : 'Getting location...',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: _isCalculatingRoute
+                                        ? Colors.blue
+                                        : primaryIndigo,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -497,6 +881,32 @@ class _ARMapScreenState extends State<ARMapScreen> {
                 ),
               ),
 
+            // Distance from current location
+            if (_currentLocation != null)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.straighten, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Distance: ${_calculateHaversineDistance(
+                        _currentLocation!.latitude!,
+                        _currentLocation!.longitude!,
+                        destination['latitude'],
+                        destination['longitude'],
+                      ).toStringAsFixed(1)} km (as the crow flies)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Action buttons
             Padding(
               padding: const EdgeInsets.all(16),
@@ -505,7 +915,7 @@ class _ARMapScreenState extends State<ARMapScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.directions),
-                      label: const Text('Directions'),
+                      label: const Text('Google Maps'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: primaryIndigo,
                         side: BorderSide(color: primaryIndigo),
@@ -520,25 +930,76 @@ class _ARMapScreenState extends State<ARMapScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      icon: const Icon(Icons.info_outline),
-                      label: const Text('View Details'),
+                      icon: const Icon(Icons.navigation),
+                      label: const Text('Get Directions'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryIndigo,
+                        backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onPressed: () {
+                        if (_currentLocation == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Getting your location...')),
+                          );
+                          _getCurrentLocation();
+                          return;
+                        }
+
+                        setState(() {
+                          _selectedDestination = destination;
+                        });
+
+                        _getDirections();
                         Navigator.pop(context);
-                        _viewDestinationDetails(destination['id']);
                       },
                     ),
                   ),
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.info_outline),
+                label: const Text('View Details'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryIndigo,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _viewDestinationDetails(destination['id']);
+                },
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  // Calculate straight-line distance using Haversine formula
+  double _calculateHaversineDistance(
+      double startLat, double startLng, double endLat, double endLng) {
+    const double earthRadius = 6371; // in kilometers
+
+    final dLat = _toRadians(endLat - startLat);
+    final dLng = _toRadians(endLng - startLng);
+
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_toRadians(startLat)) *
+            cos(_toRadians(endLat)) *
+            sin(dLng / 2) *
+            sin(dLng / 2);
+
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  double _toRadians(double degrees) {
+    return degrees * pi / 180;
   }
 }

@@ -5,6 +5,7 @@ import 'travel.dart';
 import '../widgets/appbar.dart';
 import 'map.dart';
 import 'screenshot.dart';
+
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
@@ -25,8 +26,8 @@ class _MainLayoutState extends State<MainLayout> {
   ];
 
   final List<String> _titles = [
-   '',
-    'Map', 
+    'TourMate', // Changed from empty string to 'TourMate'
+    'Map',
     'AR Mode',
     'Profile',
     'ScreenShots',
@@ -45,7 +46,6 @@ class _MainLayoutState extends State<MainLayout> {
         currentIndex: _currentIndex,
         titles: _titles,
       ),
-      
       body: Stack(
         children: [
           AnimatedSwitcher(
@@ -81,14 +81,17 @@ class _MainLayoutState extends State<MainLayout> {
                         padding: EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: Colors.deepPurpleAccent,
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(12)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               "ChatBot",
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
                             ),
                             IconButton(
                               icon: Icon(Icons.close, color: Colors.white),
@@ -101,7 +104,8 @@ class _MainLayoutState extends State<MainLayout> {
                         child: ListView(
                           padding: EdgeInsets.all(10),
                           children: [
-                            ChatBubble("Hello! How can I help you?", isBot: true),
+                            ChatBubble("Hello! How can I help you?",
+                                isBot: true),
                             ChatBubble("I need some assistance.", isBot: false),
                           ],
                         ),
@@ -119,7 +123,8 @@ class _MainLayoutState extends State<MainLayout> {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(Icons.send, color: Colors.deepPurpleAccent),
+                              icon: Icon(Icons.send,
+                                  color: Colors.deepPurpleAccent),
                               onPressed: () {},
                             ),
                           ],
@@ -132,7 +137,6 @@ class _MainLayoutState extends State<MainLayout> {
             ),
         ],
       ),
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -192,14 +196,13 @@ class _MainLayoutState extends State<MainLayout> {
             label: "Travel",
           ),
           BottomNavigationBarItem(
-           icon: Icon(Icons.image_outlined),  // Outline version of camera icon
-          activeIcon: Icon(Icons.image_outlined),     // Filled version of camera icon
-          label: "ScreenShots",                   // Label for the item
+            icon: Icon(Icons.image_outlined), // Outline version of camera icon
+            activeIcon:
+                Icon(Icons.image_outlined), // Filled version of camera icon
+            label: "ScreenShots", // Label for the item
           )
-
         ],
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: _toggleChat, // Toggle chat visibility
         backgroundColor: Colors.deepPurpleAccent,
