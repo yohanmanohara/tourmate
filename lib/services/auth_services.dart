@@ -402,7 +402,7 @@ class AuthService {
       String? uid = prefs.getString('uid');
       String? role = prefs.getString('role');
 
-      if (role != null) {
+      if (uid != null && role != null) {
         return {
           'isLoggedIn': true,
           'role': role,

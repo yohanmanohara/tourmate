@@ -77,17 +77,36 @@ class _ARMapScreenState extends State<ARMapScreen> {
     // Get current location
     _getCurrentLocation();
 
-    // Subscribe to location changes
+    // Configure location service for less frequent updates
+    _locationService.changeSettings(
+      accuracy: LocationAccuracy.high,
+      interval: 10000, // Update every 10 seconds
+      distanceFilter: 50, // Only update if moved by 10 meters
+    );
+
     _locationService.onLocationChanged.listen((LocationData locationData) {
       if (mounted) {
-        setState(() {
-          _currentLocation = locationData;
+        // Only update state if there's a significant change in location
+        final currentLat = _currentLocation?.latitude ?? 0;
+        final currentLng = _currentLocation?.longitude ?? 0;
+        final newLat = locationData.latitude ?? 0;
+        final newLng = locationData.longitude ?? 0;
 
-          // If route is active, update route
-          if (_selectedDestination != null && _polylineCoordinates.isNotEmpty) {
+        // Calculate distance between current and new location
+        final distance =
+            _calculateHaversineDistance(currentLat, currentLng, newLat, newLng);
+
+        if (_currentLocation == null || distance > 0.005) {
+          setState(() {
+            _currentLocation = locationData;
+          });
+
+          if (_selectedDestination != null &&
+              _polylineCoordinates.isNotEmpty &&
+              distance > 0.05) {
             _getDirections();
           }
-        });
+        }
       }
     });
   }
