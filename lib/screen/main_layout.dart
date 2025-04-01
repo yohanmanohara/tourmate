@@ -1,10 +1,16 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'home_page.dart';
 import 'profile_page.dart';
 import 'travel.dart';
 import '../widgets/appbar.dart';
 import 'map.dart';
 import 'screenshot.dart';
+import '../widgets/chat_bubble.dart';  
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -15,7 +21,16 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
-  bool _isChatVisible = false; // Track chat visibility
+  bool _isChatVisible = false;
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final List<ChatBubble> _messages = [
+    ChatBubble(
+      message: "Hello! I'm your Sri Lanka travel assistant. How can I help you today?",
+      isBot: true,
+      timestamp: DateTime.now(),
+    ),
+  ];
 
   final List<Widget> _screens = [
     HomePage(),
@@ -26,7 +41,7 @@ class _MainLayoutState extends State<MainLayout> {
   ];
 
   final List<String> _titles = [
-    'TourMate', // Changed from empty string to 'TourMate'
+    'TourMate',
     'Map',
     'AR Mode',
     'Profile',
@@ -37,6 +52,106 @@ class _MainLayoutState extends State<MainLayout> {
     setState(() {
       _isChatVisible = !_isChatVisible;
     });
+  }
+
+Future<String> _getBotResponse(String userMessage) async {
+  try {
+    
+    const String baseUrl = 'https://18bb-35-188-228-58.ngrok-free.app/';
+    
+    final response = await http.post(
+      Uri.parse('$baseUrl/chat'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: jsonEncode({'message': userMessage}),
+    );
+
+    // Debug print to see raw response
+    debugPrint('Response status: ${response.statusCode}');
+    debugPrint('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      try {
+        final data = jsonDecode(response.body);
+        return data['response'] ?? "I didn't get a response. Please try again.";
+      } catch (e) {
+        debugPrint('JSON decode error: $e');
+        return "Sorry, I'm having trouble understanding the response.";
+      }
+    } else if (response.statusCode == 404) {
+      return "The chat service is currently unavailable. [404]";
+    } else if (response.statusCode >= 500) {
+      return "Server error. Please try again later. [${response.statusCode}]";
+    } else {
+      return "Sorry, I couldn't get a proper response. [Status: ${response.statusCode}]";
+    }
+  } on http.ClientException catch (e) {
+    debugPrint('HTTP Client Exception: $e');
+    return "Connection failed. Please check your internet connection.";
+  } on SocketException catch (e) {
+    debugPrint('Socket Exception: $e');
+    return "Network error. Are you connected to the internet?";
+  } catch (e) {
+    debugPrint('Unexpected error: $e');
+    return "An unexpected error occurred. Please try again.";
+  }
+}
+  void _sendMessage() async {
+    if (_messageController.text.trim().isEmpty) return;
+    
+    final userMessage = _messageController.text;
+    _messageController.clear();
+    
+    setState(() {
+      _messages.insert(0, ChatBubble(
+        message: userMessage,
+        isBot: false,
+        timestamp: DateTime.now(),
+      ));
+    });
+
+    _scrollToTop();
+
+    try {
+      final botResponse = await _getBotResponse(userMessage);
+      setState(() {
+        _messages.insert(0, ChatBubble(
+          message: botResponse,
+          isBot: true,
+          timestamp: DateTime.now(),
+        ));
+      });
+      _scrollToTop();
+    } catch (e) {
+      setState(() {
+        _messages.insert(0, ChatBubble(
+          message: "Sorry, I encountered an error. Please try again.",
+          isBot: true,
+          timestamp: DateTime.now(),
+        ));
+      });
+      _scrollToTop();
+    }
+  }
+
+  void _scrollToTop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(
+        0,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -81,17 +196,18 @@ class _MainLayoutState extends State<MainLayout> {
                         padding: EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: Colors.deepPurpleAccent,
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(12)),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(12)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              "ChatBot",
+                              "Sri Lanka Travel Assistant",
                               style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             IconButton(
                               icon: Icon(Icons.close, color: Colors.white),
@@ -101,13 +217,14 @@ class _MainLayoutState extends State<MainLayout> {
                         ),
                       ),
                       Expanded(
-                        child: ListView(
+                        child: ListView.builder(
+                          controller: _scrollController,
                           padding: EdgeInsets.all(10),
-                          children: [
-                            ChatBubble("Hello! How can I help you?",
-                                isBot: true),
-                            ChatBubble("I need some assistance.", isBot: false),
-                          ],
+                          reverse: true,
+                          itemCount: _messages.length,
+                          itemBuilder: (context, index) {
+                            return _messages[index];
+                          },
                         ),
                       ),
                       Padding(
@@ -116,16 +233,20 @@ class _MainLayoutState extends State<MainLayout> {
                           children: [
                             Expanded(
                               child: TextField(
+                                controller: _messageController,
                                 decoration: InputDecoration(
-                                  hintText: "Type a message...",
+                                  hintText: "Ask about Sri Lanka...",
                                   border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
                                 ),
+                                onSubmitted: (_) => _sendMessage(),
                               ),
                             ),
                             IconButton(
-                              icon: Icon(Icons.send,
-                                  color: Colors.deepPurpleAccent),
-                              onPressed: () {},
+                              icon: Icon(Icons.send, 
+                                color: Colors.deepPurpleAccent),
+                              onPressed: _sendMessage,
                             ),
                           ],
                         ),
@@ -139,11 +260,7 @@ class _MainLayoutState extends State<MainLayout> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _currentIndex = index),
         selectedItemColor: Colors.deepPurpleAccent,
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
@@ -183,58 +300,28 @@ class _MainLayoutState extends State<MainLayout> {
                 shape: BoxShape.circle,
               ),
               padding: EdgeInsets.all(12.0),
-              child: Icon(
-                Icons.view_in_ar,
-                color: Colors.white,
-              ),
+              child: Icon(Icons.view_in_ar, color: Colors.white),
             ),
             label: "AR Mode",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.card_travel), // Airplane icon
+            icon: Icon(Icons.card_travel),
             activeIcon: Icon(Icons.card_travel),
             label: "Travel",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.image_outlined), // Outline version of camera icon
-            activeIcon:
-                Icon(Icons.image_outlined), // Filled version of camera icon
-            label: "ScreenShots", // Label for the item
-          )
+            icon: Icon(Icons.image_outlined),
+            activeIcon: Icon(Icons.image_outlined),
+            label: "ScreenShots",
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _toggleChat, // Toggle chat visibility
+        onPressed: _toggleChat,
         backgroundColor: Colors.deepPurpleAccent,
-        child: Icon(Icons.smart_toy, color: Colors.white), // Bot icon
+        child: Icon(Icons.travel_explore, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-    );
-  }
-}
-
-class ChatBubble extends StatelessWidget {
-  final String message;
-  final bool isBot;
-
-  ChatBubble(this.message, {required this.isBot});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        padding: EdgeInsets.all(10),
-        margin: EdgeInsets.symmetric(vertical: 5),
-        decoration: BoxDecoration(
-          color: isBot ? Colors.grey[300] : Colors.deepPurpleAccent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          message,
-          style: TextStyle(color: isBot ? Colors.black : Colors.white),
-        ),
-      ),
     );
   }
 }
