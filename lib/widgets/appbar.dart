@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../screen/PreferenceScreen.dart';
 import '../services/auth_services.dart';
+import '../screen/settings_page.dart';
+import '../screen/profile_page.dart';
 
 class BeautifulAppBar extends StatelessWidget implements PreferredSizeWidget {
   final int currentIndex;
@@ -17,11 +19,17 @@ class BeautifulAppBar extends StatelessWidget implements PreferredSizeWidget {
       // Navigate to settings page
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => PreferenceScreen()),
+        MaterialPageRoute(builder: (context) => SettingsPage()),
       );
     } else if (value == 'logout') {
       // Implement logout functionality
       AuthService().signOut(context);
+    } else if (value == 'profile') {
+      // Navigate to profile page
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage()),
+      );
     }
   }
 
