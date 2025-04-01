@@ -60,6 +60,17 @@ class FirestoreService {
     }
   }
 
+  // Update user profile data
+  Future<void> updateUserProfile(
+      String uid, Map<String, dynamic> userData) async {
+    try {
+      await _firestore.collection('users').doc(uid).update(userData);
+    } catch (e) {
+      print('Error updating user profile: $e');
+      rethrow;
+    }
+  }
+
   // Get all users (admin use only)
   Future<List<UserModel>> getAllUsers() async {
     try {
