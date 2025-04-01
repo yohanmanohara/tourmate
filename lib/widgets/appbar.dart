@@ -69,16 +69,7 @@ class BeautifulAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           onSelected: (value) => _onMenuItemSelected(value, context),
           itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'profile',
-              child: Row(
-                children: [
-                  Icon(Icons.person, color: Colors.indigoAccent),
-                  SizedBox(width: 8),
-                  Text('Profile'),
-                ],
-              ),
-            ),
+           
             PopupMenuItem(
               value: 'settings',
               child: Row(

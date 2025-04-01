@@ -860,7 +860,7 @@ class TravelDestinationCard extends StatelessWidget {
       Colors.red.shade400,
       Colors.green.shade400,
       Colors.orange.shade400,
-      Colors.purple.shade400,
+      
     ];
     return colors[(destination['name'].length % colors.length)];
   }

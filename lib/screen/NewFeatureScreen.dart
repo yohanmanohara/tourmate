@@ -190,7 +190,9 @@ class _CurrencyConverterScreenState extends State<NewFeatureScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Currency Converter'),
+        title: const Text('Currency Converter',
+        style: TextStyle(color: Colors.white,),
+        ),
         backgroundColor: Colors.deepPurpleAccent,
         centerTitle: true,
       ),
