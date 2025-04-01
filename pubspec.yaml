@@ -100,7 +100,9 @@ flutter:
     - assets/images/onBoarding1.jpg
     - assets/images/onBoarding2.jpg
     - assets/images/onBoarding3.jpg
-
+    - assets/icons/humidity.svg
+    - assets/icons/wind.svg
+    - assets/icons/temperature.svg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
