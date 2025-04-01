@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'home_page.dart';
-import 'profile_page.dart';
+import 'camera_page.dart';
 import 'travel.dart';
 import '../widgets/appbar.dart';
 import 'map.dart';
@@ -36,7 +36,7 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _screens = [
     HomePage(),
     ARMapScreen(),
-    ProfilePage(),
+    CameraPage(),
     TravelPage(),
     GalleryScreen(),
   ];
@@ -302,9 +302,9 @@ class _MainLayoutState extends State<MainLayout> {
                 shape: BoxShape.circle,
               ),
               padding: EdgeInsets.all(12.0),
-              child: Icon(Icons.view_in_ar, color: Colors.white),
+              child: Icon(Icons.camera_alt_rounded, color: Colors.white),
             ),
-            label: "AR Mode",
+            label: "Camera",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.card_travel),
