@@ -45,7 +45,7 @@ class _MainLayoutState extends State<MainLayout> {
     'TourMate',
     'Map',
     'AR Mode',
-    'Profile',
+    'Travel',
     'ScreenShots',
   ];
 
