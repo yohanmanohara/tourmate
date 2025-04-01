@@ -10,7 +10,8 @@ import 'travel.dart';
 import '../widgets/appbar.dart';
 import 'map.dart';
 import 'screenshot.dart';
-import '../widgets/chat_bubble.dart';  
+import '../widgets/chat_bubble.dart';
+import '../screen/NewFeatureScreen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -54,51 +55,54 @@ class _MainLayoutState extends State<MainLayout> {
     });
   }
 
-Future<String> _getBotResponse(String userMessage) async {
-  try {
-    
-    const String baseUrl = 'https://18bb-35-188-228-58.ngrok-free.app/';
-    
-    final response = await http.post(
-      Uri.parse('$baseUrl/chat'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
-      },
-      body: jsonEncode({'message': userMessage}),
+  void _openNewFeatureScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => NewFeatureScreen()),
     );
-
-    // Debug print to see raw response
-    debugPrint('Response status: ${response.statusCode}');
-    debugPrint('Response body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      try {
-        final data = jsonDecode(response.body);
-        return data['response'] ?? "I didn't get a response. Please try again.";
-      } catch (e) {
-        debugPrint('JSON decode error: $e');
-        return "Sorry, I'm having trouble understanding the response.";
-      }
-    } else if (response.statusCode == 404) {
-      return "The chat service is currently unavailable. [404]";
-    } else if (response.statusCode >= 500) {
-      return "Server error. Please try again later. [${response.statusCode}]";
-    } else {
-      return "Sorry, I couldn't get a proper response. [Status: ${response.statusCode}]";
-    }
-  } on http.ClientException catch (e) {
-    debugPrint('HTTP Client Exception: $e');
-    return "Connection failed. Please check your internet connection.";
-  } on SocketException catch (e) {
-    debugPrint('Socket Exception: $e');
-    return "Network error. Are you connected to the internet?";
-  } catch (e) {
-    debugPrint('Unexpected error: $e');
-    return "An unexpected error occurred. Please try again.";
   }
-}
+
+  Future<String> _getBotResponse(String userMessage) async {
+    try {
+      const String baseUrl = 'https://18bb-35-188-228-58.ngrok-free.app/';
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
+        body: jsonEncode({'message': userMessage}),
+      );
+
+      if (response.statusCode == 200) {
+        try {
+          final data = jsonDecode(response.body);
+          return data['response'] ?? "I didn't get a response. Please try again.";
+        } catch (e) {
+          debugPrint('JSON decode error: $e');
+          return "Sorry, I'm having trouble understanding the response.";
+        }
+      } else if (response.statusCode == 404) {
+        return "The chat service is currently unavailable. [404]";
+      } else if (response.statusCode >= 500) {
+        return "Server error. Please try again later. [${response.statusCode}]";
+      } else {
+        return "Sorry, I couldn't get a proper response. [Status: ${response.statusCode}]";
+      }
+    } on http.ClientException catch (e) {
+      debugPrint('HTTP Client Exception: $e');
+      return "Connection failed. Please check your internet connection.";
+    } on SocketException catch (e) {
+      debugPrint('Socket Exception: $e');
+      return "Network error. Are you connected to the internet?";
+    } catch (e) {
+      debugPrint('Unexpected error: $e');
+      return "An unexpected error occurred. Please try again.";
+    }
+  }
+
   void _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
     
@@ -167,8 +171,6 @@ Future<String> _getBotResponse(String userMessage) async {
             duration: Duration(milliseconds: 300),
             child: _screens[_currentIndex],
           ),
-
-          // Floating Chat Preview
           if (_isChatVisible)
             Positioned(
               bottom: 90,
@@ -316,11 +318,32 @@ Future<String> _getBotResponse(String userMessage) async {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _toggleChat,
-        backgroundColor: Colors.deepPurpleAccent,
-        child: Icon(Icons.travel_explore, color: Colors.white),
-      ),
+      floatingActionButton: _currentIndex == 0
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  onPressed: _toggleChat,
+                  backgroundColor: Colors.deepPurpleAccent,
+                  heroTag: 'chatButton',
+                  child: Icon(Icons.travel_explore, color: Colors.white),
+                ),
+                SizedBox(height: 16),
+                FloatingActionButton(
+                  onPressed: _openNewFeatureScreen,
+                  backgroundColor: const Color.fromARGB(255, 76, 228, 5),
+                  heroTag: 'newFeatureButton',
+                  child: Icon(Icons.calculate, color: Colors.white),
+                ),
+              ],
+            )
+          : FloatingActionButton(
+              onPressed: _toggleChat,
+              backgroundColor: Colors.deepPurpleAccent,
+              heroTag: 'chatButton',
+              child: Icon(Icons.travel_explore, color: Colors.white),
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
