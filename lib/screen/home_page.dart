@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class HomePage extends StatelessWidget {
-   HomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   // Enhanced dummy data with more details
-  final List<Map<String, dynamic>> _travelDestinations = [
+  final List<Map<String, dynamic>> _recommendedDestinations = [
     {
       'name': 'San Francisco',
       'image': 'sf.jpg',
@@ -20,7 +25,7 @@ class HomePage extends StatelessWidget {
       'deal': '20% off this week',
       'dealColor': Colors.red,
     },
-    {
+      {
       'name': 'Paris',
       'image': 'paris.jpg',
       'currentTemp': '12°C',
@@ -48,35 +53,208 @@ class HomePage extends StatelessWidget {
       'deal': 'Early bird discount',
       'dealColor': Colors.orange,
     },
+    // ... (keep other recommended destinations)
+  ];
+
+  final List<Map<String, dynamic>> _popularDestinations = [
     {
-      'name': 'Sydney',
-      'image': 'sydney.jpg',
-      'currentTemp': '25°C',
-      'highTemp': '28°C',
-      'lowTemp': '21°C',
-      'price': '\$280/night',
-      'rating': 4.6,
-      'reviews': 1672,
-      'description': 'Harbor city with iconic opera house',
-      'activities': ['Opera House', 'Bondi Beach', 'Harbour Bridge'],
-      'deal': 'Last minute deal',
-      'dealColor': Colors.purple,
+      'name': 'Bali',
+      'image': 'bali.jpg',
+      'currentTemp': '28°C',
+      'highTemp': '32°C',
+      'lowTemp': '26°C',
+      'price': '\$150/night',
+      'rating': 4.8,
+      'reviews': 3456,
+      'description': 'Tropical paradise with beautiful beaches',
+      'activities': ['Ubud', 'Tanah Lot', 'Uluwatu'],
+      'deal': 'All inclusive',
+      'dealColor': Colors.pink,
+    },
+      {
+      'name': 'Bali',
+      'image': 'bali.jpg',
+      'currentTemp': '28°C',
+      'highTemp': '32°C',
+      'lowTemp': '26°C',
+      'price': '\$150/night',
+      'rating': 4.8,
+      'reviews': 3456,
+      'description': 'Tropical paradise with beautiful beaches',
+      'activities': ['Ubud', 'Tanah Lot', 'Uluwatu'],
+      'deal': 'All inclusive',
+      'dealColor': Colors.pink,
+    },  {
+      'name': 'Bali',
+      'image': 'bali.jpg',
+      'currentTemp': '28°C',
+      'highTemp': '32°C',
+      'lowTemp': '26°C',
+      'price': '\$150/night',
+      'rating': 4.8,
+      'reviews': 3456,
+      'description': 'Tropical paradise with beautiful beaches',
+      'activities': ['Ubud', 'Tanah Lot', 'Uluwatu'],
+      'deal': 'All inclusive',
+      'dealColor': Colors.pink,
+    },
+    // ... (keep other popular destinations)
+  ];
+
+  // Notes functionality
+  final List<Map<String, dynamic>> _notes = [
+    {
+      'id': '1',
+      'title': 'Packing List',
+      'content': 'Passport\nSwimsuit\nCamera\nCharger',
+      'color': Colors.blue[100],
+      'date': 'Today, 10:30 AM',
     },
     {
-      'name': 'New York',
-      'image': 'ny.jpg',
-      'currentTemp': '15°C',
-      'highTemp': '18°C',
-      'lowTemp': '12°C',
-      'price': '\$200/night',
-      'rating': 4.5,
-      'reviews': 3124,
-      'description': 'The city that never sleeps',
-      'activities': ['Times Square', 'Central Park', 'Statue of Liberty'],
-      'deal': 'Weekend special',
-      'dealColor': Colors.blue,
+      'id': '2',
+      'title': 'Restaurants',
+      'content': 'Italian place near hotel\nSushi bar with good reviews',
+      'color': Colors.green[100],
+      'date': 'Yesterday, 4:45 PM',
     },
   ];
+
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _contentController = TextEditingController();
+  Color _selectedColor = Colors.blue[100]!;
+  String _editingNoteId = '';
+
+  void _addOrUpdateNote() {
+    if (_titleController.text.isEmpty || _contentController.text.isEmpty) return;
+
+    setState(() {
+      if (_editingNoteId.isEmpty) {
+        // Add new note
+        _notes.insert(0, {
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+          'title': _titleController.text,
+          'content': _contentController.text,
+          'color': _selectedColor,
+          'date': 'Just now',
+        });
+      } else {
+        // Update existing note
+        final index = _notes.indexWhere((note) => note['id'] == _editingNoteId);
+        if (index != -1) {
+          _notes[index] = {
+            'id': _editingNoteId,
+            'title': _titleController.text,
+            'content': _contentController.text,
+            'color': _selectedColor,
+            'date': 'Updated now',
+          };
+        }
+      }
+      
+      _titleController.clear();
+      _contentController.clear();
+      _editingNoteId = '';
+      _selectedColor = Colors.blue[100]!;
+    });
+    
+    Navigator.of(context).pop();
+  }
+
+  void _editNote(Map<String, dynamic> note) {
+    _titleController.text = note['title'];
+    _contentController.text = note['content'];
+    _selectedColor = note['color'];
+    _editingNoteId = note['id'];
+    
+    _showNoteDialog();
+  }
+
+  void _deleteNote(String id) {
+    setState(() {
+      _notes.removeWhere((note) => note['id'] == id);
+    });
+  }
+
+  void _showNoteDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(_editingNoteId.isEmpty ? 'Add New Note' : 'Edit Note'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _contentController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Content',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 50,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _buildColorOption(Colors.blue[100]!),
+                      _buildColorOption(Colors.green[100]!),
+                      _buildColorOption(Colors.yellow[100]!),
+                      _buildColorOption(Colors.red[100]!),
+                      _buildColorOption(Colors.purple[100]!),
+                      _buildColorOption(Colors.orange[100]!),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: _addOrUpdateNote,
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildColorOption(Color color) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedColor = color;
+        });
+      },
+      child: Container(
+        width: 40,
+        height: 40,
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(8),
+          border: _selectedColor == color
+              ? Border.all(color: Colors.black, width: 2)
+              : null,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +406,7 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
             
-                // Travel suggestions section (now shows by default)
+                // Recommended destinations section
                 const SizedBox(height: 24),
                 const Text(
                   'Recommended Destinations',
@@ -240,7 +418,7 @@ class HomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Popular destinations you might like',
+                  'Personalized picks based on your preferences',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -252,10 +430,104 @@ class HomePage extends StatelessWidget {
                   height: 280,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: _travelDestinations.length,
+                    itemCount: _recommendedDestinations.length,
                     separatorBuilder: (context, index) => const SizedBox(width: 16),
                     itemBuilder: (context, index) {
-                      final destination = _travelDestinations[index];
+                      final destination = _recommendedDestinations[index];
+                      return TravelDestinationCard(destination: destination);
+                    },
+                  ),
+                ),
+
+                // Notes section
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Travel Notes',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: _showNoteDialog,
+                      tooltip: 'Add new note',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Keep your travel plans organized',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                if (_notes.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'No notes yet. Tap the + button to add one!',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  )
+                else
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.2,
+                    ),
+                    itemCount: _notes.length,
+                    itemBuilder: (context, index) {
+                      final note = _notes[index];
+                      return _buildNoteCard(note);
+                    },
+                  ),
+
+                // Popular destinations section
+                const SizedBox(height: 24),
+                const Text(
+                  'Popular Destinations',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Trending destinations travelers love',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                SizedBox(
+                  height: 280,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _popularDestinations.length,
+                    separatorBuilder: (context, index) => const SizedBox(width: 16),
+                    itemBuilder: (context, index) {
+                      final destination = _popularDestinations[index];
                       return TravelDestinationCard(destination: destination);
                     },
                   ),
@@ -265,9 +537,70 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-          
-      
-      
+    );
+  }
+
+  Widget _buildNoteCard(Map<String, dynamic> note) {
+    return GestureDetector(
+      onTap: () => _editNote(note),
+      child: Container(
+        decoration: BoxDecoration(
+          color: note['color'],
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  note['title'],
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  note['content'],
+                  style: const TextStyle(fontSize: 14),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Spacer(),
+                Text(
+                  note['date'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                icon: const Icon(Icons.delete, size: 18),
+                onPressed: () => _deleteNote(note['id']),
+                color: Colors.grey[700],
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
