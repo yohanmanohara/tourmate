@@ -132,7 +132,6 @@ class _UserDestinationDetailsScreenState
     _scrollController.dispose();
     _reviewController.dispose();
     super.dispose();
-    super.dispose();
   }
 
   Future<void> _loadDestinationData() async {
