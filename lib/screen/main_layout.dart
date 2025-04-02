@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'home_page.dart';
-import 'camera_page.dart';
+import 'FavouritePage.dart';
 import 'travel.dart';
 import '../widgets/appbar.dart';
 import 'map.dart';
@@ -36,16 +36,16 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _screens = [
     HomePage(),
-    ARMapScreen(),
-    CameraPage(),
+    FavouritePage(),
+    MapScreen(),
     TravelPage(),
     GalleryScreen(),
   ];
 
   final List<String> _titles = [
     'TourMate',
-    'Map',
-    'AR Mode',
+    'Favourite',
+    'Explore Destinations',
     'Travel',
     'ScreenShots',
   ];
@@ -205,7 +205,7 @@ class _MainLayoutState extends State<MainLayout> {
                       Container(
                         padding: EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurpleAccent,
+                          color: Colors.indigoAccent,
                           borderRadius: BorderRadius.vertical(
                             top: Radius.circular(12)),
                         ),
@@ -255,7 +255,7 @@ class _MainLayoutState extends State<MainLayout> {
                             ),
                             IconButton(
                               icon: Icon(Icons.send, 
-                                color: Colors.deepPurpleAccent),
+                                color: Colors.indigoAccent),
                               onPressed: _sendMessage,
                             ),
                           ],
@@ -271,7 +271,7 @@ class _MainLayoutState extends State<MainLayout> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        selectedItemColor: Colors.deepPurpleAccent,
+        selectedItemColor: Colors.indigoAccent,
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed,
@@ -286,7 +286,7 @@ class _MainLayoutState extends State<MainLayout> {
         ),
         selectedIconTheme: IconThemeData(
           size: 28,
-          color: Colors.deepPurpleAccent,
+          color: Colors.indigoAccent,
         ),
         unselectedIconTheme: IconThemeData(
           size: 24,
@@ -299,20 +299,22 @@ class _MainLayoutState extends State<MainLayout> {
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.map_outlined),
-            activeIcon: Icon(Icons.map),
-            label: "Map",
+            icon: Icon(Icons.star_border_rounded),
+            activeIcon: Icon(Icons.star_border_purple500),
+            label: "Favourite",
           ),
           BottomNavigationBarItem(
             icon: Container(
               decoration: BoxDecoration(
-                color: Colors.indigo,
+                color: Colors.indigoAccent,
                 shape: BoxShape.circle,
               ),
               padding: EdgeInsets.all(12.0),
-              child: Icon(Icons.camera_alt_rounded, color: Colors.white),
+              child: Icon(Icons.map_outlined, 
+              color: Colors.white),
+              
             ),
-            label: "Camera",
+            label: "Locations",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.card_travel),
@@ -333,7 +335,7 @@ class _MainLayoutState extends State<MainLayout> {
         children: [
           FloatingActionButton(
             onPressed: _toggleChat,
-            backgroundColor: Colors.deepPurpleAccent,
+            backgroundColor: Colors.indigoAccent,
             heroTag: 'chatButton',
             child: Icon(Icons.travel_explore, color: Colors.white),
           ),
@@ -356,7 +358,7 @@ class _MainLayoutState extends State<MainLayout> {
       )
     : FloatingActionButton(
         onPressed: _toggleChat,
-        backgroundColor: Colors.deepPurpleAccent,
+        backgroundColor: Colors.indigoAccent,
         heroTag: 'chatButton',
         child: Icon(Icons.travel_explore, color: Colors.white),
       ),
