@@ -440,7 +440,7 @@ class AuthService {
     }
   }
 
-  // Store user session data
+  
   Future<void> storeUserSession(User user, String role) async {
     try {
       String idToken = await user.getIdToken() ?? '';

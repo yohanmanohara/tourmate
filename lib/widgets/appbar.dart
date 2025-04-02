@@ -1,35 +1,87 @@
 import 'package:flutter/material.dart';
-import '../screen/PreferenceScreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_services.dart';
 import '../screen/settings_page.dart';
 import '../screen/profile_page.dart';
-
-class BeautifulAppBar extends StatelessWidget implements PreferredSizeWidget {
+import 'dart:async'; 
+class BeautifulAppBar extends StatefulWidget implements PreferredSizeWidget {
   final int currentIndex;
   final List<String> titles;
+  final VoidCallback? onNotificationPressed;
 
   const BeautifulAppBar({
     super.key,
     required this.currentIndex,
     required this.titles,
+    this.onNotificationPressed,
   });
 
-  void _onMenuItemSelected(String value, BuildContext context) {
-    if (value == 'settings') {
-      // Navigate to settings page
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => SettingsPage()),
-      );
-    } else if (value == 'logout') {
-      // Implement logout functionality
-      AuthService().signOut(context);
-    } else if (value == 'profile') {
-      // Navigate to profile page
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ProfilePage()),
-      );
+  @override
+  State<BeautifulAppBar> createState() => _BeautifulAppBarState();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class _BeautifulAppBarState extends State<BeautifulAppBar> {
+  String? profileImageUrl;
+  String?username;
+  bool isLoading = true;
+    Timer? _timer; // A
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+    _timer = Timer.periodic(const Duration(minutes: 3), (timer) {
+      _loadUserData();
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+
+        if (userDoc.exists) {
+          final userData = userDoc.data() as Map<String, dynamic>;
+          setState(() {
+            profileImageUrl = userData['photoUrl'] ?? userData['profileImageUrl'];
+            username=userData['name'];
+            isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      debugPrint('Error loading user data: $e');
+    }
+  }
+
+  void _onMenuItemSelected(String value) {
+    switch (value) {
+      case 'profile':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfilePage()),
+        );
+        break;
+      case 'settings':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SettingsPage()),
+        );
+        break;
+      case 'logout':
+        AuthService().signOut(context);
+        break;
     }
   }
 
@@ -37,8 +89,8 @@ class BeautifulAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(
-        titles[currentIndex],
-        style: TextStyle(
+        widget.titles[widget.currentIndex],
+        style: const TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
@@ -46,57 +98,92 @@ class BeautifulAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       backgroundColor: Colors.indigoAccent,
-      
+      elevation: 4,
       actions: [
-        // Add notification icon
         IconButton(
-          icon: Icon(Icons.notifications_none, color: Colors.white),
-          onPressed: () {
-            // Show notifications
+          icon: const Icon(Icons.notifications_none, color: Colors.white),
+          onPressed: widget.onNotificationPressed ?? () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No new notifications')),
+            );
           },
         ),
+ Text(
+  username ?? 'My Profile',
+  style: const TextStyle(
+    color: Colors.white,
+    fontWeight: FontWeight.bold,  // Makes text bold
+    fontSize: 15.0,              // Slightly larger size
+  ),
+),
 
-        // Add profile icon or popup menu
-        PopupMenuButton<String>(
-          icon: CircleAvatar(
-            backgroundColor: Colors.white,
-            radius: 16,
-            child: Icon(
-              Icons.person_outline,
-              color: Colors.indigoAccent,
-              size: 18,
+
+        if (isLoading)
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2,
             ),
+          )
+        else
+
+
+          PopupMenuButton<String>(
+            icon: CircleAvatar(
+    backgroundColor: Colors.white, // Background when no image
+    backgroundImage: profileImageUrl != null 
+        ? NetworkImage(profileImageUrl!) 
+        : null,
+    onBackgroundImageError: (exception, stackTrace) {
+      setState(() {
+        profileImageUrl = null;
+      });
+    },
+    child: profileImageUrl == null
+        ? const Icon(
+            Icons.person_outline,
+            color: Colors.indigoAccent,
+            size: 18,
+          )
+        : ColorFiltered(
+            colorFilter: const ColorFilter.mode(
+              Colors.white,
+              BlendMode.srcATop,
+            ),
+            child: Container(), // Empty container as the image is already set as background
           ),
-          onSelected: (value) => _onMenuItemSelected(value, context),
-          itemBuilder: (context) => [
-           
-            PopupMenuItem(
-              value: 'settings',
-              child: Row(
-                children: [
-                  Icon(Icons.settings, color: Colors.grey),
-                  SizedBox(width: 8),
-                  Text('Settings'),
-                ],
+  ),
+
+
+
+            onSelected: _onMenuItemSelected,
+            itemBuilder: (context) => [
+             
+              const PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Text('Settings'),
+                  ],
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'logout',
-              child: Row(
-                children: [
-                  Icon(Icons.logout, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Logout'),
-                ],
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Logout'),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-        SizedBox(width: 8),
+            ],
+          ),
+        const SizedBox(width: 8),
       ],
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
