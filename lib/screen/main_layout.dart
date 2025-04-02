@@ -12,6 +12,7 @@ import 'map.dart';
 import 'screenshot.dart';
 import '../widgets/chat_bubble.dart';
 import '../screen/NewFeatureScreen.dart';
+import '../screen/sos.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -53,6 +54,13 @@ class _MainLayoutState extends State<MainLayout> {
     setState(() {
       _isChatVisible = !_isChatVisible;
     });
+  }
+
+ void _Sos() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SOS()),
+    );
   }
 
   void _openNewFeatureScreen() {
@@ -173,13 +181,13 @@ class _MainLayoutState extends State<MainLayout> {
           ),
           if (_isChatVisible)
             Positioned(
-              bottom: 90,
-              right: 20,
+              bottom: 100,
+              right: 80,
               child: Material(
                 elevation: 5,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  width: 350,
+                  width: 310,
                   height: 500,
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -318,33 +326,43 @@ class _MainLayoutState extends State<MainLayout> {
           ),
         ],
       ),
-      floatingActionButton: _currentIndex == 0
-          ? Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                FloatingActionButton(
-                  onPressed: _toggleChat,
-                  backgroundColor: Colors.deepPurpleAccent,
-                  heroTag: 'chatButton',
-                  child: Icon(Icons.travel_explore, color: Colors.white),
-                ),
-                SizedBox(height: 16),
-                FloatingActionButton(
-                  onPressed: _openNewFeatureScreen,
-                  backgroundColor: const Color.fromARGB(255, 76, 228, 5),
-                  heroTag: 'newFeatureButton',
-                  child: Icon(Icons.calculate, color: Colors.white),
-                ),
-              ],
-            )
-          : FloatingActionButton(
-              onPressed: _toggleChat,
-              backgroundColor: Colors.deepPurpleAccent,
-              heroTag: 'chatButton',
-              child: Icon(Icons.travel_explore, color: Colors.white),
-            ),
+     floatingActionButton: _currentIndex == 0
+    ? Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: _toggleChat,
+            backgroundColor: Colors.deepPurpleAccent,
+            heroTag: 'chatButton',
+            child: Icon(Icons.travel_explore, color: Colors.white),
+          ),
+          SizedBox(height: 16),
+          FloatingActionButton(
+            onPressed: _openNewFeatureScreen,
+            backgroundColor: const Color.fromARGB(255, 76, 228, 5),
+            heroTag: 'newFeatureButton',
+            child: Icon(Icons.calculate, color: Colors.white),
+          ),
+          SizedBox(height: 16), // Add spacing
+          FloatingActionButton(
+            onPressed: _Sos, // Emergency function
+            backgroundColor: Colors.red, // Emergency red color
+            heroTag: 'sosButton', // Emergency icon
+            elevation: 6,
+            child: Icon(Icons.emergency, color: Colors.white), // Slightly higher elevation for prominence
+          ),
+        ],
+      )
+    : FloatingActionButton(
+        onPressed: _toggleChat,
+        backgroundColor: Colors.deepPurpleAccent,
+        heroTag: 'chatButton',
+        child: Icon(Icons.travel_explore, color: Colors.white),
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
+
+
