@@ -24,25 +24,25 @@ class DestinationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Destination image with temperature overlay
+          // Destination image
           Stack(
             children: [
-              // Image placeholder (replace with actual Image.asset)
+              // Main image (using first image from the list)
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Container(
-                  height: 140,
-                  color: _getRandomColor(),
-                  child: Center(
-                    child: Icon(
-                      Icons.photo,
-                      size: 50,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                ),
+                child: destination.images.isNotEmpty
+                    ? Image.network(
+                        destination.images.first,
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => 
+                            _buildPlaceholderImage(),
+                      )
+                    : _buildPlaceholderImage(),
               ),
-              // Temperature overlay
+              
+              // Rating overlay
               Positioned(
                 top: 12,
                 left: 12,
@@ -55,10 +55,10 @@ class DestinationCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.thermostat, size: 16, color: Colors.white),
+                      const Icon(Icons.star, size: 16, color: Colors.amber),
                       const SizedBox(width: 4),
                       Text(
-                        destination.currentTemp,
+                        destination.averageRating.toStringAsFixed(1),
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
@@ -69,27 +69,27 @@ class DestinationCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Deal badge
-              if (destination.deal != null)
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: destination.dealColor ?? Colors.blue,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      destination.deal!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+              
+              // Category badge
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getCategoryColor(destination.category),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    destination.category,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
+              ),
             ],
           ),
           
@@ -99,12 +99,12 @@ class DestinationCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Destination name and rating
+                // Destination title and reviews
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      destination.name,
+                      destination.title,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -112,13 +112,13 @@ class DestinationCard extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.star, size: 18, color: Colors.amber),
-                        const SizedBox(width: 2),
+                        const Icon(Icons.reviews, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
                         Text(
-                          destination.rating.toString(),
+                          destination.reviews.toString(),
                           style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.grey,
                           ),
                         ),
                       ],
@@ -126,33 +126,47 @@ class DestinationCard extends StatelessWidget {
                   ],
                 ),
                 
-                // Temperature range
+                // Location
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     children: [
+                      const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
                       Text(
-                        'H: ${destination.highTemp}',
+                        destination.location,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.red[600],
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'L: ${destination.lowTemp}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue[600],
-                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[600],
                         ),
                       ),
                     ],
                   ),
                 ),
                 
-                // Short description
+                // Features (first 2 features)
+                if (destination.features.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Wrap(
+                      spacing: 4,
+                      children: destination.features
+                          .take(2)
+                          .map((feature) => Chip(
+                                label: Text(
+                                  feature,
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                
+                const SizedBox(height: 8),
+                
+                // Description
                 Text(
                   destination.description,
                   style: TextStyle(
@@ -165,39 +179,44 @@ class DestinationCard extends StatelessWidget {
                 
                 const SizedBox(height: 8),
                 
-                // Price and book button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      destination.price,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
+                // Explore button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'Book',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+                    child: const Text(
+                      'Explore',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      height: 140,
+      color: _getRandomColor(),
+      child: Center(
+        child: Icon(
+          Icons.photo,
+          size: 50,
+          color: Colors.white.withOpacity(0.8),
+        ),
       ),
     );
   }
@@ -209,6 +228,21 @@ class DestinationCard extends StatelessWidget {
       Colors.green.shade400,
       Colors.orange.shade400,
     ];
-    return colors[(destination.name.length % colors.length)];
+    return colors[(destination.title.length % colors.length)];
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'city':
+        return Colors.blue;
+      case 'beach':
+        return Colors.teal;
+      case 'cultural':
+        return Colors.purple;
+      case 'mountain':
+        return Colors.brown;
+      default:
+        return Colors.blueGrey;
+    }
   }
 }

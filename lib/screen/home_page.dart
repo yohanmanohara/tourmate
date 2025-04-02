@@ -15,55 +15,56 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   // Enhanced dummy data with more details
-  final List<Destination> _recommendedDestinations = [
-    Destination(
-      name: 'San Francisco',
-      image: 'sf.jpg',
-      currentTemp: '18°C',
-      highTemp: '22°C',
-      lowTemp: '14°C',
-      price: '\$120/night',
-      rating: 4.7,
-      reviews: 1243,
-      description: 'Golden Gate City with iconic bridges',
-      activities: ['Alcatraz', 'Golden Gate', 'Cable Cars'],
-      deal: '20% off this week',
-      dealColor: Colors.red,
-    ),
-    Destination(
-      name: 'Paris',
-      image: 'paris.jpg',
-      currentTemp: '12°C',
-      highTemp: '16°C',
-      lowTemp: '8°C',
-      price: '\$250/night',
-      rating: 4.9,
-      reviews: 2856,
-      description: 'City of Love and Lights',
-      activities: ['Eiffel Tower', 'Louvre', 'Seine Cruise'],
-      deal: 'Free cancellation',
-      dealColor: Colors.green,
-    ),
-    // Add more destinations...
-  ];
+ // Enhanced dummy data with more details
+final List<Destination> _recommendedDestinations = [
+  Destination(
+    id: '1',
+    title: 'San Francisco',
+    description: 'Golden Gate City with iconic bridges',
+    category: 'City',
+    location: 'California, USA',
+    features: ['Golden Gate Bridge', 'Alcatraz Island', 'Cable Cars'],
+    images: ['sf.jpg'],
+    averageRating: 4.7,
+    reviews: 1243,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+    coordinates: {'lat': 37.7749, 'lng': -122.4194},
+  ),
+  Destination(
+    id: '2',
+    title: 'Paris',
+    description: 'City of Love and Lights',
+    category: 'City',
+    location: 'Île-de-France, France',
+    features: ['Eiffel Tower', 'Louvre Museum', 'Seine River Cruise'],
+    images: ['paris.jpg'],
+    averageRating: 4.9,
+    reviews: 2856,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+    coordinates: {'lat': 48.8566, 'lng': 2.3522},
+  ),
+  // Add more destinations...
+];
 
-  final List<Destination> _popularDestinations = [
-    Destination(
-      name: 'Bali',
-      image: 'bali.jpg',
-      currentTemp: '28°C',
-      highTemp: '32°C',
-      lowTemp: '26°C',
-      price: '\$150/night',
-      rating: 4.8,
-      reviews: 3456,
-      description: 'Tropical paradise with beautiful beaches',
-      activities: ['Ubud', 'Tanah Lot', 'Uluwatu'],
-      deal: 'All inclusive',
-      dealColor: Colors.pink,
-    ),
-    // Add more destinations...
-  ];
+final List<Destination> _popularDestinations = [
+  Destination(
+    id: '3',
+    title: 'Bali',
+    description: 'Tropical paradise with beautiful beaches',
+    category: 'Beach',
+    location: 'Bali, Indonesia',
+    features: ['Ubud Monkey Forest', 'Tanah Lot Temple', 'Uluwatu Cliff'],
+    images: ['bali.jpg'],
+    averageRating: 4.8,
+    reviews: 3456,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+    coordinates: {'lat': -8.3405, 'lng': 115.0920},
+  ),
+  // Add more destinations...
+];
 
   final List<Note> _notes = [
     Note(
