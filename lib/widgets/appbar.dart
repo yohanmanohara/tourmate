@@ -28,7 +28,7 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
   String? profileImageUrl;
   String?username;
   bool isLoading = true;
-    Timer? _timer; // A
+  Timer? _timer; 
 
   @override
   void initState() {
@@ -88,8 +88,13 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(
-        widget.titles[widget.currentIndex],
+      
+      
+      title: Row(
+    children: [
+     
+      Text(
+        'TourMate',
         style: const TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w600,
@@ -97,6 +102,10 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
           color: Colors.white,
         ),
       ),
+    ],
+  ),
+
+
       backgroundColor: Colors.indigoAccent,
       
       actions: [
@@ -118,44 +127,27 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
 ),
 
 
-        if (isLoading)
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 2,
-            ),
-          )
-        else
-
-
           PopupMenuButton<String>(
             icon: CircleAvatar(
-    backgroundColor: Colors.white, // Background when no image
-    backgroundImage: profileImageUrl != null 
-        ? NetworkImage(profileImageUrl!) 
-        : null,
-    onBackgroundImageError: (exception, stackTrace) {
-      setState(() {
-        profileImageUrl = null;
-      });
-    },
-    child: profileImageUrl == null
-        ? const Icon(
-            Icons.person_outline,
-            color: Colors.indigoAccent,
-            size: 18,
-          )
-        : ColorFiltered(
-            colorFilter: const ColorFilter.mode(
-              Colors.white,
-              BlendMode.srcATop,
-            ),
-            child: Container(), // Empty container as the image is already set as background
-          ),
-  ),
-
-
+  backgroundColor: Colors.transparent,
+  backgroundImage: profileImageUrl != null
+      ? NetworkImage(profileImageUrl!)
+      : const AssetImage('assets/icons/profile.png'), // Local fallback
+  onBackgroundImageError: (exception, stackTrace) {
+    // If network image fails, use local image
+    setState(() {
+      profileImageUrl = null;
+    });
+  },
+  child: profileImageUrl == null
+      ? Image.asset(
+          'assets/icons/profile.png',
+          width: 40,  // Match CircleAvatar size
+          height: 40,
+          fit: BoxFit.cover,
+        )
+      : null,
+),
 
             onSelected: _onMenuItemSelected,
             itemBuilder: (context) => [

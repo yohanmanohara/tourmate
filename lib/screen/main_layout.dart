@@ -187,7 +187,7 @@ class _MainLayoutState extends State<MainLayout> {
                 elevation: 5,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  width: 310,
+                  width: 260,
                   height: 500,
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -324,7 +324,7 @@ class _MainLayoutState extends State<MainLayout> {
           BottomNavigationBarItem(
             icon: Icon(Icons.image_outlined),
             activeIcon: Icon(Icons.image_outlined),
-            label: "ScreenShots",
+            label: "Gallery",
           ),
         ],
       ),
