@@ -129,7 +129,7 @@ class AuthService {
 
         // Add a slight delay for the toast to be visible, then navigate
         Future.delayed(const Duration(seconds: 1), () {
-          _navigateBasedOnRole(context, role);
+          _navigateAfterAuth(context, role);
         });
 
         return true; // Return true to indicate successful login
@@ -220,11 +220,7 @@ class AuthService {
 
         // Navigate to MainLayout after a delay (all new users are regular users)
         Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pushReplacement(
-            // ignore: use_build_context_synchronously
-            context,
-            MaterialPageRoute(builder: (context) => const MainLayout()),
-          );
+          _navigateAfterAuth(context, 'user');
         });
       }
     } catch (e) {
@@ -317,7 +313,7 @@ class AuthService {
 
           // Add navigation after a short delay
           Future.delayed(const Duration(seconds: 1), () {
-            _navigateBasedOnRole(context, role);
+            _navigateAfterAuth(context, role);
           });
 
           // Return the user
@@ -440,7 +436,6 @@ class AuthService {
     }
   }
 
-  
   Future<void> storeUserSession(User user, String role) async {
     try {
       String idToken = await user.getIdToken() ?? '';
@@ -471,6 +466,24 @@ class AuthService {
     } catch (e) {
       print('Error creating user with email and password: $e');
       rethrow;
+    }
+  }
+
+  // Update your existing signUp method to check for preferences completion
+  Future<void> _navigateAfterAuth(BuildContext context, String role) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasCompletedPreferences =
+        prefs.getBool('hasCompletedPreferences') ?? false;
+
+    if (role == 'admin') {
+      Navigator.pushReplacementNamed(context, '/admin-dashboard');
+    } else {
+      // For regular users, check if they've completed preferences
+      if (!hasCompletedPreferences) {
+        Navigator.pushReplacementNamed(context, '/preferences');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     }
   }
 }

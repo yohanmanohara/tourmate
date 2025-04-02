@@ -6,6 +6,7 @@ import '../../services/auth_services.dart';
 import '../models/user_model.dart';
 import '../services/firestore_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -253,8 +254,20 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                                         );
 
                                         // Navigate to home page after successful signup
-                                        Navigator.pushReplacementNamed(
-                                            context, '/home');
+                                        final prefs = await SharedPreferences
+                                            .getInstance();
+                                        bool hasCompletedPreferences =
+                                            prefs.getBool(
+                                                    'hasCompletedPreferences') ??
+                                                false;
+
+                                        if (hasCompletedPreferences) {
+                                          Navigator.pushReplacementNamed(
+                                              context, '/home');
+                                        } else {
+                                          Navigator.pushReplacementNamed(
+                                              context, '/preferences');
+                                        }
                                       }
                                     } catch (e) {
                                       // Show error message
