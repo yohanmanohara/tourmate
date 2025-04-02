@@ -49,7 +49,12 @@ class _EditDestinationScreenState extends State<EditDestinationScreen> {
     'Nature',
     'Cultural',
     'Urban',
-    'Adventure'
+    'Adventure',
+    'Food',
+    'Beach',
+    'Mountain',
+    'Religious',
+    'Art'
   ];
 
   final List<String> _featureOptions = [

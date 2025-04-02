@@ -21,7 +21,12 @@ class _ManageDestinationsScreenState extends State<ManageDestinationsScreen> {
     'Nature',
     'Cultural',
     'Urban',
-    'Adventure'
+    'Adventure',
+    'Food',
+    'Beach',
+    'Mountain',
+    'Religious',
+    'Art'
   ];
   final Set<String> _expandedItems = {};
   int _selectedIndex = 1; // Set to 1 for Destinations tab
