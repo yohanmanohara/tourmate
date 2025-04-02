@@ -335,7 +335,9 @@ class _MainLayoutState extends State<MainLayout> {
         children: [
           FloatingActionButton(
             onPressed: _toggleChat,
+
             backgroundColor: Colors.indigoAccent,
+
             heroTag: 'chatButton',
             child: Icon(Icons.travel_explore, color: Colors.white),
           ),
@@ -358,7 +360,9 @@ class _MainLayoutState extends State<MainLayout> {
       )
     : FloatingActionButton(
         onPressed: _toggleChat,
+
         backgroundColor: Colors.indigoAccent,
+
         heroTag: 'chatButton',
         child: Icon(Icons.travel_explore, color: Colors.white),
       ),
