@@ -5,6 +5,7 @@ import '../services/auth_services.dart';
 import '../screen/settings_page.dart';
 import '../screen/profile_page.dart';
 import 'dart:async'; 
+
 class BeautifulAppBar extends StatefulWidget implements PreferredSizeWidget {
   final int currentIndex;
   final List<String> titles;
@@ -26,7 +27,7 @@ class BeautifulAppBar extends StatefulWidget implements PreferredSizeWidget {
 
 class _BeautifulAppBarState extends State<BeautifulAppBar> {
   String? profileImageUrl;
-  String?username;
+  String? username;
   bool isLoading = true;
   Timer? _timer; 
 
@@ -34,9 +35,15 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
   void initState() {
     super.initState();
     _loadUserData();
-    _timer = Timer.periodic(const Duration(minutes: 3), (timer) {
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       _loadUserData();
     });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
@@ -52,7 +59,7 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
           final userData = userDoc.data() as Map<String, dynamic>;
           setState(() {
             profileImageUrl = userData['photoUrl'] ?? userData['profileImageUrl'];
-            username=userData['name'];
+            username = userData['name'];
             isLoading = false;
           });
         }
@@ -88,12 +95,8 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      
-      
-      title: Row(
-    children: [
-     
-      Text(
+      automaticallyImplyLeading: false, // This ensures no back button appears
+      title: Text(
         'TourMate',
         style: const TextStyle(
           fontSize: 22,
@@ -102,12 +105,7 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
           color: Colors.white,
         ),
       ),
-    ],
-  ),
-
-
       backgroundColor: Colors.indigoAccent,
-      
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
@@ -117,63 +115,58 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
             );
           },
         ),
- Text(
-  username ?? 'My Profile',
-  style: const TextStyle(
-    color: Colors.white,
-    fontWeight: FontWeight.bold,  // Makes text bold
-    fontSize: 15.0,              // Slightly larger size
-  ),
-),
-
-
-          PopupMenuButton<String>(
-            icon: CircleAvatar(
-  backgroundColor: Colors.transparent,
-  backgroundImage: profileImageUrl != null
-      ? NetworkImage(profileImageUrl!)
-      : const AssetImage('assets/icons/profile.png'), // Local fallback
-  onBackgroundImageError: (exception, stackTrace) {
-    // If network image fails, use local image
-    setState(() {
-      profileImageUrl = null;
-    });
-  },
-  child: profileImageUrl == null
-      ? Image.asset(
-          'assets/icons/profile.png',
-          width: 40,  // Match CircleAvatar size
-          height: 40,
-          fit: BoxFit.cover,
-        )
-      : null,
-),
-
-            onSelected: _onMenuItemSelected,
-            itemBuilder: (context) => [
-             
-              const PopupMenuItem(
-                value: 'settings',
-                child: Row(
-                  children: [
-                    Icon(Icons.settings, color: Colors.grey),
-                    SizedBox(width: 8),
-                    Text('Settings'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Logout'),
-                  ],
-                ),
-              ),
-            ],
+        Text(
+          username ?? 'My Profile',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 15.0,
           ),
+        ),
+        PopupMenuButton<String>(
+          icon: CircleAvatar(
+            backgroundColor: Colors.transparent,
+            backgroundImage: profileImageUrl != null
+                ? NetworkImage(profileImageUrl!)
+                : const AssetImage('assets/icons/profile.png') as ImageProvider,
+            onBackgroundImageError: (exception, stackTrace) {
+              setState(() {
+                profileImageUrl = null;
+              });
+            },
+            child: profileImageUrl == null
+                ? Image.asset(
+                    'assets/icons/profile.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+          onSelected: _onMenuItemSelected,
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'settings',
+              child: Row(
+                children: [
+                  Icon(Icons.settings, color: Colors.grey),
+                  SizedBox(width: 8),
+                  Text('Settings'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'logout',
+              child: Row(
+                children: [
+                  Icon(Icons.logout, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Logout'),
+                ],
+              ),
+            ),
+          ],
+        ),
         const SizedBox(width: 8),
       ],
     );
