@@ -46,7 +46,7 @@ class BeautifulAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       backgroundColor: Colors.indigoAccent,
-      elevation: 4,
+      
       actions: [
         // Add notification icon
         IconButton(

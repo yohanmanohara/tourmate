@@ -9,14 +9,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:math';
 import '../services/directions_service.dart'; // Add this import
 
-class ARMapScreen extends StatefulWidget {
-  const ARMapScreen({Key? key}) : super(key: key);
+class MapScreen extends StatefulWidget {
+  const MapScreen({Key? key}) : super(key: key);
 
   @override
-  State<ARMapScreen> createState() => _ARMapScreenState();
+  State<MapScreen> createState() => _MapScreen();
 }
 
-class _ARMapScreenState extends State<ARMapScreen> {
+class _MapScreen extends State<MapScreen> {
   final MapController _mapController = MapController();
   bool _isLoading = true;
   List<Map<String, dynamic>> _destinations = [];
@@ -279,7 +279,7 @@ class _ARMapScreenState extends State<ARMapScreen> {
   @override
   Widget build(BuildContext context) {
     // Define the primary indigo color to match other admin screens
-    final Color primaryIndigo = Colors.indigo;
+    final Color primaryIndigo = Colors.indigoAccent;
 
     // Filter destinations by selected category
     final filteredDestinations = _selectedCategoryFilter == 'All'
@@ -290,13 +290,7 @@ class _ARMapScreenState extends State<ARMapScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Explore Destinations',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+       
         backgroundColor: primaryIndigo,
         actions: [
           IconButton(
@@ -304,11 +298,7 @@ class _ARMapScreenState extends State<ARMapScreen> {
             tooltip: 'Refresh destinations',
             onPressed: _loadDestinations,
           ),
-          IconButton(
-            icon: const Icon(Icons.my_location, color: Colors.white),
-            tooltip: 'My location',
-            onPressed: _getCurrentLocation,
-          ),
+         
         ],
       ),
       body: _isLoading
