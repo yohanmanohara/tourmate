@@ -14,6 +14,8 @@ import './screen/admin/edit_destination.dart';
 import './screen/admin/destination_details.dart';
 import './screen/admin/manage_users.dart';
 import './screen/destination_details_user.dart';
+import './screen/preferenceselectionscreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,7 +72,8 @@ class MyApp extends StatelessWidget {
             appBar: AppBar(title: const Text('Error')),
             body: const Center(child: Text('Invalid destination ID')),
           );
-        }
+        },
+        '/preferences': (context) => const PreferenceScreen(),
         // Add other routes as needed
       },
     );
@@ -112,7 +115,16 @@ class _AuthValidateState extends State<AuthValidate> {
         if (userStatus['role'] == 'admin') {
           Navigator.pushReplacementNamed(context, '/admin-dashboard');
         } else {
-          Navigator.pushReplacementNamed(context, '/home');
+          // Check if regular user has completed preferences
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          bool hasCompletedPreferences =
+              prefs.getBool('hasCompletedPreferences') ?? false;
+
+          if (hasCompletedPreferences) {
+            Navigator.pushReplacementNamed(context, '/home');
+          } else {
+            Navigator.pushReplacementNamed(context, '/preferences');
+          }
         }
       } else {
         // Not logged in, show onboarding
