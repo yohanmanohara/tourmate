@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class UserDestinationDetailsScreen extends StatefulWidget {
   final String destinationId;
@@ -31,9 +32,97 @@ class _UserDestinationDetailsScreenState
   bool _isFavorite = false;
   final TextEditingController _reviewController = TextEditingController();
   double _rating = 0.0; // Initialize _rating with a default value
+  String? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    _loadDestinationData();
+    _checkIfFavorite();
+  }
+
+  Future<void> _checkIfFavorite() async {
+    try {
+      final auth = FirebaseAuth.instance;
+      if (auth.currentUser == null) return;
+
+      _userId = auth.currentUser!.uid;
+
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .collection('favorites')
+          .doc(widget.destinationId)
+          .get();
+
+      if (mounted) {
+        setState(() {
+          _isFavorite = docSnapshot.exists;
+        });
+      }
+    } catch (e) {
+      print('Error checking favorite status: $e');
+    }
+  }
+
+  void _toggleFavorite() async {
+    if (_userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to save favorites'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final userFavoritesRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .collection('favorites')
+          .doc(widget.destinationId);
+
+      if (_isFavorite) {
+        await userFavoritesRef.delete();
+      } else {
+        await userFavoritesRef.set({
+          'destinationId': widget.destinationId,
+          'title': _destinationData!['title'] ?? 'Unknown Destination',
+          'location': _destinationData!['location'] ?? 'Unknown Location',
+          'thumbnailUrl': _destinationData!['images'] != null &&
+                  (_destinationData!['images'] as List).isNotEmpty
+              ? _destinationData!['images'][0]
+              : null,
+          'category': _destinationData!['category'] ?? 'Uncategorized',
+          'addedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      setState(() {
+        _isFavorite = !_isFavorite;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              _isFavorite ? 'Added to favorites' : 'Removed from favorites'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating favorites: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   void _submitReview() async {
-    // Validate rating
     if (_rating == 0.0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please add a rating before submitting.')),
@@ -51,14 +140,12 @@ class _UserDestinationDetailsScreenState
     }
 
     try {
-      // Show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Update the destination's average rating
       final destinationRef = FirebaseFirestore.instance
           .collection('destinations')
           .doc(widget.destinationId);
@@ -70,20 +157,17 @@ class _UserDestinationDetailsScreenState
           throw Exception('Destination not found');
         }
 
-        // Calculate new average rating
         final currentRating = destinationDoc.data()?['averageRating'] ?? 0.0;
         final totalReviews = destinationDoc.data()?['totalReviews'] ?? 0;
         final newTotalReviews = totalReviews + 1;
         final newAverageRating =
             ((currentRating * totalReviews) + _rating) / newTotalReviews;
 
-        // Update destination document
         transaction.update(destinationRef, {
           'averageRating': newAverageRating,
           'totalReviews': newTotalReviews,
         });
 
-        // Add the review
         final reviewRef =
             FirebaseFirestore.instance.collection('reviews').doc();
         transaction.set(reviewRef, {
@@ -95,35 +179,23 @@ class _UserDestinationDetailsScreenState
         });
       });
 
-      // Close loading dialog
       Navigator.pop(context);
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Review submitted successfully!')),
       );
 
-      // Clear form
       setState(() {
         _rating = 0.0;
         _reviewController.clear();
       });
     } catch (error) {
-      // Close loading dialog
       Navigator.pop(context);
 
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to submit review: $error')),
       );
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _loadDestinationData();
   }
 
   @override
@@ -173,21 +245,6 @@ class _UserDestinationDetailsScreenState
         );
       }
     }
-  }
-
-  void _toggleFavorite() {
-    setState(() {
-      _isFavorite = !_isFavorite;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            Text(_isFavorite ? 'Added to favorites' : 'Removed from favorites'),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 1),
-      ),
-    );
-    // Implement actual favorite functionality here
   }
 
   @override
@@ -257,7 +314,6 @@ class _UserDestinationDetailsScreenState
       );
     }
 
-    // Extract data from destination
     final String title = _destinationData!['title'] ?? 'Unknown Destination';
     final String description =
         _destinationData!['description'] ?? 'No description available';
@@ -269,7 +325,6 @@ class _UserDestinationDetailsScreenState
     final double rating =
         (_destinationData!['averageRating'] ?? 0.0).toDouble();
 
-    // Coordinates for map
     final double latitude =
         _destinationData!['coordinates']?['latitude'] ?? 7.8731;
     final double longitude =
@@ -339,7 +394,6 @@ class _UserDestinationDetailsScreenState
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Image carousel - fixed implementation
                     PageView.builder(
                       controller: _pageController,
                       itemCount: images.isEmpty ? 1 : images.length,
@@ -365,7 +419,6 @@ class _UserDestinationDetailsScreenState
 
                         return GestureDetector(
                           onTap: () {
-                            // Optional: Add image preview functionality
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -406,8 +459,6 @@ class _UserDestinationDetailsScreenState
                         );
                       },
                     ),
-
-                    // Gradient overlay
                     Positioned.fill(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
@@ -423,8 +474,6 @@ class _UserDestinationDetailsScreenState
                         ),
                       ),
                     ),
-
-                    // Category badge
                     Positioned(
                       top: statusBarHeight + 16,
                       right: 16.0,
@@ -445,8 +494,6 @@ class _UserDestinationDetailsScreenState
                         ),
                       ),
                     ),
-
-                    // Title and location at bottom
                     Positioned(
                       left: 16,
                       right: 16,
@@ -527,8 +574,6 @@ class _UserDestinationDetailsScreenState
                         ],
                       ),
                     ),
-
-                    // Improved image indicator dots with better visibility
                     if (images.length > 1)
                       Positioned(
                         bottom: 80.0,
@@ -576,10 +621,7 @@ class _UserDestinationDetailsScreenState
                           ),
                         ),
                       ),
-
-                    // Left/Right navigation arrows for image carousel
                     if (images.length > 1) ...[
-                      // Left arrow
                       Positioned(
                         left: 8,
                         top: 0,
@@ -616,8 +658,6 @@ class _UserDestinationDetailsScreenState
                               : const SizedBox(),
                         ),
                       ),
-
-                      // Right arrow
                       Positioned(
                         right: 8,
                         top: 0,
@@ -692,7 +732,6 @@ class _UserDestinationDetailsScreenState
             controller: _tabController,
             physics: const BouncingScrollPhysics(),
             children: [
-              // Overview Tab
               SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 physics: const BouncingScrollPhysics(),
@@ -716,7 +755,6 @@ class _UserDestinationDetailsScreenState
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Quick Info Cards
                     if (hasCoordinates)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -761,12 +799,10 @@ class _UserDestinationDetailsScreenState
                           ),
                         ],
                       ),
-                    const SizedBox(height: 100), // Bottom padding
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
-
-              // Features Tab
               SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 physics: const BouncingScrollPhysics(),
@@ -838,12 +874,10 @@ class _UserDestinationDetailsScreenState
                         ),
                       ),
                     ],
-                    const SizedBox(height: 100), // Bottom padding
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
-
-              // Location Tab
               SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 physics: const BouncingScrollPhysics(),
@@ -992,12 +1026,10 @@ class _UserDestinationDetailsScreenState
                         ),
                       ),
                     ],
-                    const SizedBox(height: 100), // Bottom padding
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
-
-              // Reviews Tab
               SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 physics: const BouncingScrollPhysics(),
@@ -1024,7 +1056,7 @@ class _UserDestinationDetailsScreenState
                         ),
                         const SizedBox(height: 8),
                         RatingBar.builder(
-                          initialRating: _rating, // Change from 0 to _rating
+                          initialRating: _rating,
                           minRating: 1,
                           direction: Axis.horizontal,
                           allowHalfRating: true,
@@ -1107,8 +1139,7 @@ class _UserDestinationDetailsScreenState
                           stream: FirebaseFirestore.instance
                               .collection('reviews')
                               .where('destinationId',
-                                  isEqualTo: widget
-                                      .destinationId) // Filter by destinationId
+                                  isEqualTo: widget.destinationId)
                               .orderBy('timestamp', descending: true)
                               .snapshots(),
                           builder:
@@ -1215,7 +1246,7 @@ class _UserDestinationDetailsScreenState
                         ),
                       ],
                     ),
-                    const SizedBox(height: 100), // Bottom padding
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
