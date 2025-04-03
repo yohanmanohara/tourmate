@@ -106,7 +106,7 @@ class _TravelPageState extends State<TravelPage> {
                   scrollDirection: Axis.horizontal,
                   children: [
                     _buildCategoryChip('All', Icons.public),
-                    _buildCategoryChip('City', Icons.location_city),
+                    _buildCategoryChip('Urban', Icons.location_city),
                     _buildCategoryChip('Beach', Icons.beach_access),
                     _buildCategoryChip('Nature', Icons.forest),
                     _buildCategoryChip('Cultural', Icons.account_balance),
