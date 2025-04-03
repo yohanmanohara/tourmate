@@ -9,7 +9,7 @@ import 'FavouritePage.dart';
 import 'travel.dart';
 import '../widgets/appbar.dart';
 import 'map.dart';
-import 'screenshot.dart';
+import 'gallery.dart';
 import '../widgets/chat_bubble.dart';
 import 'Currency.dart';
 import '../screen/sos.dart';
