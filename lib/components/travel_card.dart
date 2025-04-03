@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/destination.dart'; 
+import '../models/destination.dart';
 
 class DestinationCard extends StatefulWidget {
   final Destination destination;
@@ -7,6 +7,7 @@ class DestinationCard extends StatefulWidget {
   final double expandedHeight;
   final VoidCallback? onExplorePressed;
   final VoidCallback? onSavePressed;
+  final VoidCallback? onViewDetails;
 
   const DestinationCard({
     super.key,
@@ -15,6 +16,7 @@ class DestinationCard extends StatefulWidget {
     this.expandedHeight = 320,
     this.onExplorePressed,
     this.onSavePressed,
+    this.onViewDetails,
   });
 
   @override
@@ -31,82 +33,96 @@ class _DestinationCardState extends State<DestinationCard> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
 
     return GestureDetector(
       onTap: () => setState(() => _isExpanded = !_isExpanded),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        height: _isExpanded ? widget.expandedHeight : widget.initialHeight,
-        child: Card(
-          clipBehavior: Clip.antiAlias,
-          elevation: 2,
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: theme.dividerColor.withOpacity(0.1),
-              width: 0.5,
-            ),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        elevation: 2,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: theme.dividerColor.withOpacity(0.1),
+            width: 0.5,
           ),
-          child: Stack(
-            children: [
-              // Background Image
-              _buildImage(),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Card content with flexible height
+            AspectRatio(
+              aspectRatio: _isExpanded ? 4 / 5 : 16 / 9,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Background Image
+                  _buildImage(),
 
-              // Gradient Overlay
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(_isExpanded ? 0.9 : 0.7),
-                      ],
-                      stops: const [0.5, 1.0],
+                  // Gradient Overlay
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(_isExpanded ? 0.9 : 0.7),
+                          ],
+                          stops: const [0.5, 1.0],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+
+                  // Content
+                  Padding(
+                    padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        // Title and Rating
+                        _buildTitleAndRating(
+                            textTheme, colorScheme, isSmallScreen),
+
+                        SizedBox(height: isSmallScreen ? 4 : 8),
+
+                        // Location
+                        _buildLocation(textTheme),
+
+                        SizedBox(height: isSmallScreen ? 8 : 12),
+
+                        // Features
+                        if (widget.destination.features.isNotEmpty &&
+                            (!isSmallScreen || _isExpanded))
+                          _buildFeatures(textTheme),
+
+                        SizedBox(height: isSmallScreen ? 8 : 12),
+
+                        // Description (expanded only)
+                        if (_isExpanded)
+                          _buildDescription(textTheme, colorScheme),
+
+                        // Action Buttons
+                        Padding(
+                          padding: EdgeInsets.only(top: isSmallScreen ? 8 : 12),
+                          child: _buildActionButtons(
+                              colorScheme, textTheme, isSmallScreen),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Expand/Collapse Indicator
+                  _buildExpandIndicator(),
+                ],
               ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    // Title and Rating
-                    _buildTitleAndRating(textTheme, colorScheme),
-
-                    const SizedBox(height: 8),
-
-                    // Location
-                    _buildLocation(textTheme),
-
-                    const SizedBox(height: 12),
-
-                    // Features
-                    if (widget.destination.features.isNotEmpty)
-                      _buildFeatures(textTheme),
-
-                    const SizedBox(height: 12),
-
-                    // Description (expanded only)
-                    if (_isExpanded) _buildDescription(textTheme, colorScheme),
-
-                    // Action Buttons
-                    _buildActionButtons(colorScheme, textTheme),
-                  ],
-                ),
-              ),
-
-              // Expand/Collapse Indicator
-              _buildExpandIndicator(),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -129,20 +145,24 @@ class _DestinationCardState extends State<DestinationCard> {
                   ),
                 );
               },
-              errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+              errorBuilder: (context, error, stackTrace) =>
+                  _buildPlaceholderImage(),
             )
           : _buildPlaceholderImage(),
     );
   }
 
-  Widget _buildTitleAndRating(TextTheme textTheme, ColorScheme colorScheme) {
+  Widget _buildTitleAndRating(
+      TextTheme textTheme, ColorScheme colorScheme, bool isSmallScreen) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
           child: Text(
             widget.destination.title,
-            style: textTheme.titleLarge?.copyWith(
+            style:
+                (isSmallScreen ? textTheme.titleMedium : textTheme.titleLarge)
+                    ?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w700,
             ),
@@ -150,10 +170,12 @@ class _DestinationCardState extends State<DestinationCard> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         if (widget.destination.averageRating > 0)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 6 : 8,
+                vertical: isSmallScreen ? 3 : 4),
             decoration: BoxDecoration(
               color: colorScheme.primary,
               borderRadius: BorderRadius.circular(12),
@@ -161,15 +183,18 @@ class _DestinationCardState extends State<DestinationCard> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.star_rounded,
-                  size: 16,
+                  size: isSmallScreen ? 14 : 16,
                   color: Colors.white,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: isSmallScreen ? 2 : 4),
                 Text(
                   widget.destination.averageRating.toStringAsFixed(1),
-                  style: textTheme.labelLarge?.copyWith(
+                  style: (isSmallScreen
+                          ? textTheme.labelMedium
+                          : textTheme.labelLarge)
+                      ?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
@@ -210,7 +235,7 @@ class _DestinationCardState extends State<DestinationCard> {
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: widget.destination.features
-            .take(3)
+            .take(_isExpanded ? 5 : 3)
             .map(
               (feature) => Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -237,37 +262,41 @@ class _DestinationCardState extends State<DestinationCard> {
   }
 
   Widget _buildDescription(TextTheme textTheme, ColorScheme colorScheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.destination.description,
-          style: textTheme.bodyMedium?.copyWith(
-            color: Colors.white.withOpacity(0.9),
-            height: 1.5,
+    return LayoutBuilder(builder: (context, constraints) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.destination.description,
+            style: textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withOpacity(0.9),
+              height: 1.5,
+            ),
+            maxLines: _showFullDescription ? null : 3,
+            overflow: _showFullDescription
+                ? TextOverflow.clip
+                : TextOverflow.ellipsis,
           ),
-          maxLines: _showFullDescription ? null : 3,
-          overflow: _showFullDescription
-              ? TextOverflow.clip
-              : TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => setState(() => _showFullDescription = !_showFullDescription),
-          child: Text(
-            _showFullDescription ? 'Show less' : 'Read more',
-            style: textTheme.labelMedium?.copyWith(
-              color: colorScheme.primary.withOpacity(0.8),
-              fontWeight: FontWeight.w600,
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () =>
+                setState(() => _showFullDescription = !_showFullDescription),
+            child: Text(
+              _showFullDescription ? 'Show less' : 'Read more',
+              style: textTheme.labelMedium?.copyWith(
+                color: colorScheme.primary.withOpacity(0.8),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-      ],
-    );
+          const SizedBox(height: 8),
+        ],
+      );
+    });
   }
 
-  Widget _buildActionButtons(ColorScheme colorScheme, TextTheme textTheme) {
+  Widget _buildActionButtons(
+      ColorScheme colorScheme, TextTheme textTheme, bool isSmallScreen) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -276,14 +305,17 @@ class _DestinationCardState extends State<DestinationCard> {
           icon: Icon(
             _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
             color: Colors.white.withOpacity(0.8),
+            size: isSmallScreen ? 20 : 24,
           ),
           onPressed: () {
             setState(() => _isSaved = !_isSaved);
             widget.onSavePressed?.call();
           },
+          padding: EdgeInsets.zero,
+          constraints: BoxConstraints(),
         ),
 
-        // Explore button
+        // Explore button - now the only main action button
         Expanded(
           child: Align(
             alignment: Alignment.centerRight,
@@ -292,14 +324,19 @@ class _DestinationCardState extends State<DestinationCard> {
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: colorScheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 12 : 20,
+                    vertical: isSmallScreen ? 8 : 10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: Text(
                 'Explore Now',
-                style: textTheme.labelLarge?.copyWith(
+                style: (isSmallScreen
+                        ? textTheme.labelMedium
+                        : textTheme.labelLarge)
+                    ?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),

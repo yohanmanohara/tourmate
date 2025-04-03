@@ -26,8 +26,9 @@ class _TravelPageState extends State<TravelPage> {
 
   Future<void> _fetchDestinations() async {
     try {
-      QuerySnapshot snapshot = await _firestore.collection('destinations').get();
-      
+      QuerySnapshot snapshot =
+          await _firestore.collection('destinations').get();
+
       List<Destination> loadedDestinations = [];
       for (var doc in snapshot.docs) {
         loadedDestinations.add(Destination.fromFirestore(doc));
@@ -50,20 +51,37 @@ class _TravelPageState extends State<TravelPage> {
   void _filterDestinations() {
     setState(() {
       filteredDestinations = allDestinations.where((destination) {
-        final matchesSearch = destination.title.toLowerCase().contains(searchQuery.toLowerCase()) || 
-                            destination.location.toLowerCase().contains(searchQuery.toLowerCase());
-        final matchesCategory = selectedCategory == 'All' || 
-                              destination.category.toLowerCase() == selectedCategory.toLowerCase();
+        final matchesSearch = destination.title
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase()) ||
+            destination.location
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase());
+        final matchesCategory = selectedCategory == 'All' ||
+            destination.category.toLowerCase() ==
+                selectedCategory.toLowerCase();
         return matchesSearch && matchesCategory;
       }).toList();
     });
+  }
+
+  // Navigate to destination details screen
+  void _navigateToDetails(String destinationId) {
+    Navigator.pushNamed(
+      context,
+      '/user-destination-details',
+      arguments: destinationId,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
+    final horizontalPadding = isTablet ? 24.0 : 16.0;
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -71,7 +89,10 @@ class _TravelPageState extends State<TravelPage> {
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(30),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 8,
+                ),
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search destinations...',
@@ -81,9 +102,7 @@ class _TravelPageState extends State<TravelPage> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: isDarkMode 
-                        ? Colors.grey[800] 
-                        : Colors.grey[100],
+                    fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
                     contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   ),
                   onChanged: (value) {
@@ -96,9 +115,11 @@ class _TravelPageState extends State<TravelPage> {
               ),
             ),
           ),
-          
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: 8,
+            ),
             sliver: SliverToBoxAdapter(
               child: SizedBox(
                 height: 50,
@@ -116,7 +137,6 @@ class _TravelPageState extends State<TravelPage> {
               ),
             ),
           ),
-          
           if (isLoading)
             SliverFillRemaining(
               child: Center(
@@ -124,23 +144,7 @@ class _TravelPageState extends State<TravelPage> {
               ),
             )
           else if (filteredDestinations.isNotEmpty)
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: DestinationCard(
-                        destination: filteredDestinations[index],
-                        initialHeight: 200,
-                      ),
-                    );
-                  },
-                  childCount: filteredDestinations.length,
-                ),
-              ),
-            )
+            _buildDestinationGrid(horizontalPadding, isTablet)
           else
             SliverFillRemaining(
               child: Center(
@@ -175,9 +179,56 @@ class _TravelPageState extends State<TravelPage> {
     );
   }
 
+  Widget _buildDestinationGrid(double horizontalPadding, bool isTablet) {
+    if (isTablet) {
+      return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.5,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              return DestinationCard(
+                destination: filteredDestinations[index],
+                initialHeight: 180,
+                onExplorePressed: () =>
+                    _navigateToDetails(filteredDestinations[index].id ?? ''),
+              );
+            },
+            childCount: filteredDestinations.length,
+          ),
+        ),
+      );
+    }
+
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: DestinationCard(
+                destination: filteredDestinations[index],
+                initialHeight: 200,
+                onExplorePressed: () =>
+                    _navigateToDetails(filteredDestinations[index].id ?? ''),
+              ),
+            );
+          },
+          childCount: filteredDestinations.length,
+        ),
+      ),
+    );
+  }
+
   Widget _buildCategoryChip(String category, IconData icon) {
     final isSelected = selectedCategory == category;
-    
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
@@ -198,10 +249,10 @@ class _TravelPageState extends State<TravelPage> {
         },
         selectedColor: Theme.of(context).colorScheme.primaryContainer,
         labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: isSelected 
-              ? Theme.of(context).colorScheme.onPrimaryContainer 
-              : Theme.of(context).colorScheme.onSurface,
-        ),
+              color: isSelected
+                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
