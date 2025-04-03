@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../components/weather_card.dart';
 import '../components/destination_card.dart';
 import '../components/note_card.dart';
@@ -14,113 +15,178 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Enhanced dummy data with more details
- // Enhanced dummy data with more details
-final List<Destination> _recommendedDestinations = [
-  Destination(
-    id: '1',
-    title: 'San Francisco',
-    description: 'Golden Gate City with iconic bridges',
-    category: 'City',
-    location: 'California, USA',
-    features: ['Golden Gate Bridge', 'Alcatraz Island', 'Cable Cars'],
-    images: ['sf.jpg'],
-    averageRating: 4.7,
-    reviews: 1243,
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-    coordinates: {'lat': 37.7749, 'lng': -122.4194},
-  ),
-  Destination(
-    id: '2',
-    title: 'Paris',
-    description: 'City of Love and Lights',
-    category: 'City',
-    location: 'Île-de-France, France',
-    features: ['Eiffel Tower', 'Louvre Museum', 'Seine River Cruise'],
-    images: ['paris.jpg'],
-    averageRating: 4.9,
-    reviews: 2856,
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-    coordinates: {'lat': 48.8566, 'lng': 2.3522},
-  ),
-  // Add more destinations...
-];
+  final CollectionReference destinationsCollection =
+      FirebaseFirestore.instance.collection('destinations');
+  final CollectionReference notesCollection =
+      FirebaseFirestore.instance.collection('notes');
+  final CollectionReference usersCollection =
+      FirebaseFirestore.instance.collection('users');
 
-final List<Destination> _popularDestinations = [
-  Destination(
-    id: '3',
-    title: 'Bali',
-    description: 'Tropical paradise with beautiful beaches',
-    category: 'Beach',
-    location: 'Bali, Indonesia',
-    features: ['Ubud Monkey Forest', 'Tanah Lot Temple', 'Uluwatu Cliff'],
-    images: ['bali.jpg'],
-    averageRating: 4.8,
-    reviews: 3456,
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-    coordinates: {'lat': -8.3405, 'lng': 115.0920},
-  ),
-  // Add more destinations...
-];
-
-  final List<Note> _notes = [
-    Note(
-      id: '1',
-      title: 'Packing List',
-      content: 'Passport\nSwimsuit\nCamera\nCharger',
-      color: Colors.blue[100]!,
-      date: 'Today, 10:30 AM',
-    ),
-    Note(
-      id: '2',
-      title: 'Restaurants',
-      content: 'Italian place near hotel\nSushi bar with good reviews',
-      color: Colors.green[100]!,
-      date: 'Yesterday, 4:45 PM',
-    ),
-  ];
+  List<String> _userPreferences = [];
+  late Future<void> _preferencesFuture;
+  late Future<List<Destination>> _recommendedDestinationsFuture;
+  late Future<List<Destination>> _popularDestinationsFuture;
+  late Future<List<Note>> _notesFuture;
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
   Color _selectedColor = Colors.blue[100]!;
   String _editingNoteId = '';
 
-  void _addOrUpdateNote() {
+  @override
+  void initState() {
+    super.initState();
+    _preferencesFuture = _fetchUserPreferences().then((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _fetchUserPreferences() async {
+    try {
+      // Replace 'current_user_id' with your actual user ID retrieval logic
+      final userDoc = await usersCollection.doc('current_user_id').get();
+
+      if (userDoc.exists) {
+        final data = userDoc.data() as Map<String, dynamic>;
+        setState(() {
+          _userPreferences = List<String>.from(data['preferences'] ?? []);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching user preferences: $e');
+    }
+  }
+
+  void _loadData() {
+    _recommendedDestinationsFuture = _fetchRecommendedDestinations();
+    _popularDestinationsFuture = _fetchPopularDestinations();
+    _notesFuture = _fetchNotes();
+  }
+
+  Future<List<Destination>> _fetchRecommendedDestinations() async {
+    try {
+      Query query = destinationsCollection;
+      
+      // Filter by user preferences if they exist
+      if (_userPreferences.isNotEmpty) {
+        query = query.where('category', whereIn: _userPreferences);
+      }
+
+      final querySnapshot = await query
+          .orderBy('averageRating', descending: true)
+          .limit(5)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => Destination.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching recommended destinations: $e');
+      return [];
+    }
+  }
+
+  Future<List<Destination>> _fetchPopularDestinations() async {
+    try {
+      final querySnapshot = await destinationsCollection
+          .orderBy('reviews', descending: true)
+          .limit(5)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => Destination.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching popular destinations: $e');
+      return [];
+    }
+  }
+
+  Future<List<Note>> _fetchNotes() async {
+    try {
+      final querySnapshot = await notesCollection
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Note(
+          id: doc.id,
+          title: data['title'] ?? '',
+          content: data['content'] ?? '',
+          color: _colorFromString(data['color'] ?? 'blue'),
+          date: DateFormat('MMM d, h:mm a').format(
+              (data['createdAt'] as Timestamp).toDate()),
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('Error fetching notes: $e');
+      return [];
+    }
+  }
+
+  Color _colorFromString(String colorName) {
+    switch (colorName) {
+      case 'blue':
+        return Colors.blue[100]!;
+      case 'green':
+        return Colors.green[100]!;
+      case 'yellow':
+        return Colors.yellow[100]!;
+      case 'red':
+        return Colors.red[100]!;
+      case 'purple':
+        return Colors.purple[100]!;
+      case 'orange':
+        return Colors.orange[100]!;
+      default:
+        return Colors.blue[100]!;
+    }
+  }
+
+  String _colorToString(Color color) {
+    if (color == Colors.blue[100]) return 'blue';
+    if (color == Colors.green[100]) return 'green';
+    if (color == Colors.yellow[100]) return 'yellow';
+    if (color == Colors.red[100]) return 'red';
+    if (color == Colors.purple[100]) return 'purple';
+    if (color == Colors.orange[100]) return 'orange';
+    return 'blue';
+  }
+
+  Future<void> _addOrUpdateNote() async {
     if (_titleController.text.isEmpty || _contentController.text.isEmpty) return;
 
-    setState(() {
+    try {
+      final noteData = {
+        'title': _titleController.text,
+        'content': _contentController.text,
+        'color': _colorToString(_selectedColor),
+        'createdAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      };
+
       if (_editingNoteId.isEmpty) {
-        // Add new note
-        _notes.insert(0, Note(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          title: _titleController.text,
-          content: _contentController.text,
-          color: _selectedColor,
-          date: 'Just now',
-        ));
+        await notesCollection.add(noteData);
       } else {
-        // Update existing note
-        final index = _notes.indexWhere((note) => note.id == _editingNoteId);
-        if (index != -1) {
-          _notes[index] = Note(
-            id: _editingNoteId,
-            title: _titleController.text,
-            content: _contentController.text,
-            color: _selectedColor,
-            date: 'Updated now',
-          );
-        }
+        await notesCollection.doc(_editingNoteId).update(noteData);
       }
-      
+
       _titleController.clear();
       _contentController.clear();
       _editingNoteId = '';
       _selectedColor = Colors.blue[100]!;
-    });
-    
+
+      setState(() {
+        _notesFuture = _fetchNotes();
+      });
+    } catch (e) {
+      debugPrint('Error saving note: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save note: $e')),
+      );
+    }
+
     Navigator.of(context).pop();
   }
 
@@ -129,14 +195,21 @@ final List<Destination> _popularDestinations = [
     _contentController.text = note.content;
     _selectedColor = note.color;
     _editingNoteId = note.id;
-    
     _showNoteDialog();
   }
 
-  void _deleteNote(String id) {
-    setState(() {
-      _notes.removeWhere((note) => note.id == id);
-    });
+  Future<void> _deleteNote(String id) async {
+    try {
+      await notesCollection.doc(id).delete();
+      setState(() {
+        _notesFuture = _fetchNotes();
+      });
+    } catch (e) {
+      debugPrint('Error deleting note: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete note: $e')),
+      );
+    }
   }
 
   void _showNoteDialog() {
@@ -225,199 +298,267 @@ final List<Destination> _popularDestinations = [
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 250, 250, 250),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with date
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: FutureBuilder<void>(
+          future: _preferencesFuture,
+          builder: (context, preferencesSnapshot) {
+            if (preferencesSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            
+            if (preferencesSnapshot.hasError) {
+              return Center(child: Text('Error loading preferences: ${preferencesSnapshot.error}'));
+            }
+            
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    // Header with date
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Good Morning',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.calendar_today,
-                                  size: 16, color: Colors.blue[700]),
-                              const SizedBox(width: 6),
-                              Text(
-                                DateFormat('EEEE, MMMM d').format(DateTime.now()),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.blue[700],
-                                ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Good Morning',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.calendar_today,
+                                      size: 16, color: Colors.blue[700]),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    DateFormat('EEEE, MMMM d').format(DateTime.now()),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.blue[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Having a nice day 🌟',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 24),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Having a nice day 🌟',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
-                // Weather card
-                WeatherCard(),
-                
-                // Recommended destinations section
-                const SizedBox(height: 24),
-                const Text(
-                  'Recommended Destinations',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Personalized picks based on your preferences',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                SizedBox(
-                  height: 280,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _recommendedDestinations.length,
-                    separatorBuilder: (context, index) => const SizedBox(width: 16),
-                    itemBuilder: (context, index) {
-                      return DestinationCard(destination: _recommendedDestinations[index]);
-                    },
-                  ),
-                ),
-
-                // Notes section
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                    // Weather card
+                    WeatherCard(),
+                    
+                    // Recommended destinations section
+                    const SizedBox(height: 24),
                     const Text(
-                      'Travel Notes',
+                      'Recommended For You',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: _showNoteDialog,
-                      tooltip: 'Add new note',
+                    const SizedBox(height: 8),
+                    Text(
+                      _userPreferences.isNotEmpty
+                          ? 'Based on your preferences: ${_userPreferences.join(', ')}'
+                          : 'Popular destinations you might like',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    FutureBuilder<List<Destination>>(
+                      future: _recommendedDestinationsFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        }
+                        
+                        final destinations = snapshot.data ?? [];
+                        
+                        if (destinations.isEmpty) {
+                          return const Text('No recommended destinations found');
+                        }
+                        
+                        return SizedBox(
+                          height: 430,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: destinations.length,
+                            separatorBuilder: (context, index) => const SizedBox(width: 16),
+                            itemBuilder: (context, index) {
+                              return DestinationCard(destination: destinations[index]);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+
+                    // Notes section
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Travel Notes',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: _showNoteDialog,
+                          tooltip: 'Add new note',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Keep your travel plans organized',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    FutureBuilder<List<Note>>(
+                      future: _notesFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        }
+                        
+                        final notes = snapshot.data ?? [];
+                        
+                        if (notes.isEmpty) {
+                          return Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'No notes yet. Tap the + button to add one!',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                          );
+                        }
+                        
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 1.2,
+                          ),
+                          itemCount: notes.length,
+                          itemBuilder: (context, index) {
+                            return NoteCard(
+                              note: notes[index],
+                              onEdit: _editNote,
+                              onDelete: _deleteNote,
+                            );
+                          },
+                        );
+                      },
+                    ),
+
+                    // Popular destinations section
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Popular Destinations',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Trending destinations travelers love',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    FutureBuilder<List<Destination>>(
+                      future: _popularDestinationsFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        }
+                        
+                        final destinations = snapshot.data ?? [];
+                        
+                        if (destinations.isEmpty) {
+                          return const Text('No popular destinations found');
+                        }
+                        
+                        return SizedBox(
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: destinations.length,
+                            separatorBuilder: (context, index) => const SizedBox(width: 16),
+                            itemBuilder: (context, index) {
+                              return DestinationCard(destination: destinations[index]);
+                            },
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Keep your travel plans organized',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                if (_notes.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'No notes yet. Tap the + button to add one!',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  )
-                else
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.2,
-                    ),
-                    itemCount: _notes.length,
-                    itemBuilder: (context, index) {
-                      return NoteCard(
-                        note: _notes[index],
-                        onEdit: _editNote,
-                        onDelete: _deleteNote,
-                      );
-                    },
-                  ),
-
-                // Popular destinations section
-                const SizedBox(height: 24),
-                const Text(
-                  'Popular Destinations',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Trending destinations travelers love',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                SizedBox(
-                  height: 280,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _popularDestinations.length,
-                    separatorBuilder: (context, index) => const SizedBox(width: 16),
-                    itemBuilder: (context, index) {
-                      return DestinationCard(destination: _popularDestinations[index]);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
