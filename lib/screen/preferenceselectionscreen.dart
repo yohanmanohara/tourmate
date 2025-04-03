@@ -17,10 +17,12 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
     'Cultural',
     'Urban',
     'Adventure',
+
     'Beach',
     'Mountain',
    
     
+
   ];
 
   final Set<String> selectedCategories = {};
@@ -148,10 +150,12 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
                     child: CircularProgressIndicator(color: Colors.white))
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
+
                       children: [
                         // App logo or icon
                         
                         const SizedBox(height: 20),
+
 
                       // Title
                       const Text(
@@ -192,6 +196,7 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
                                 .toList(),
                           ),
                         ),
+
                       ),
 
                       // Continue Button
