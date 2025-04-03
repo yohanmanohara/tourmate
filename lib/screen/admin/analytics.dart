@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-
+import '../../services/auth_services.dart';
 class Analytics extends StatefulWidget {
   const Analytics({super.key});
 
@@ -10,26 +10,25 @@ class Analytics extends StatefulWidget {
 
 class _AnalyticsState extends State<Analytics> with SingleTickerProviderStateMixin {
   int _selectedIndex = 3;
-  final Color primaryColor = const Color(0xFF6C63FF);
+  final Color primaryColor = Colors.indigo; // Changed to match admin dashboard
   final Color secondaryColor = const Color(0xFF4A44B7);
   final Color backgroundColor = Colors.white;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
   final List<Map<String, dynamic>> analyticsData = [
-    {'title': 'Total Users', 'value': '1,230', 'change': '+12%', 'icon': Icons.people_alt_outlined, 'color': Colors.blue},
-    {'title': 'Active Today', 'value': '876', 'change': '+5%', 'icon': Icons.trending_up, 'color': Colors.green},
-    {'title': 'New Sign-ups', 'value': '256', 'change': '+24%', 'icon': Icons.person_add_alt_1, 'color': Colors.orange},
-    {'title': 'Total Revenue', 'value': '\$12,500', 'change': '+8%', 'icon': Icons.attach_money, 'color': Colors.purple},
+    {'title': 'Total Users', 'value': '16', 'change': '+32%', 'icon': Icons.people_alt_outlined, 'color': Colors.blue},
+    {'title': 'Active USers Today', 'value': '5', 'change': '+24%', 'icon': Icons.trending_up, 'color': Colors.green},
+    {'title': 'New Sign-ups', 'value': '2', 'change': '+2%', 'icon': Icons.person_add_alt_1, 'color': Colors.orange},
   ];
 
   final List<Map<String, dynamic>> chartData = [
     {'day': 'Mon', 'value': 45},
     {'day': 'Tue', 'value': 68},
     {'day': 'Wed', 'value': 72},
-    {'day': 'Thu', 'value': 89},
+    
     {'day': 'Fri', 'value': 120},
-    {'day': 'Sat', 'value': 145},
+   
     {'day': 'Sun', 'value': 98},
   ];
 
@@ -76,29 +75,35 @@ class _AnalyticsState extends State<Analytics> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size for responsive layout
+    final Size screenSize = MediaQuery.of(context).size;
+    final bool isSmallScreen = screenSize.width < 360;
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
         title: const Text(
           'Analytics Dashboard',
           style: TextStyle(
-            fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontSize: 24.0,
           ),
         ),
         backgroundColor: primaryColor,
-        elevation: 0,
+        elevation: 4,
         centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
-        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
+            tooltip: 'Refresh statistics',
             onPressed: _refreshData,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              await AuthService().signOut(context);
+            },
           ),
         ],
       ),
@@ -122,9 +127,9 @@ class _AnalyticsState extends State<Analytics> with SingleTickerProviderStateMix
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.2,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isSmallScreen ? 2 : 2,
+                  childAspectRatio: isSmallScreen ? 1.1 : 1.2,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                 ),
@@ -143,12 +148,12 @@ class _AnalyticsState extends State<Analytics> with SingleTickerProviderStateMix
               const SizedBox(height: 12),
               _buildActivityChart(),
               const SizedBox(height: 24),
-              _buildRecentActivityList(),
+             
             ],
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomAppBar(),
+      bottomNavigationBar: _buildBottomAppBar(isSmallScreen),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Add action
@@ -163,7 +168,7 @@ class _AnalyticsState extends State<Analytics> with SingleTickerProviderStateMix
 
   Widget _buildMetricCard(Map<String, dynamic> data) {
     return Card(
-      elevation: 0,
+      elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -209,7 +214,7 @@ class _AnalyticsState extends State<Analytics> with SingleTickerProviderStateMix
               data['value'],
               style: const TextStyle(
                 color: Colors.black87,
-                fontSize: 20,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -371,7 +376,7 @@ class _AnalyticsState extends State<Analytics> with SingleTickerProviderStateMix
     );
   }
 
-  BottomAppBar _buildBottomAppBar() {
+  BottomAppBar _buildBottomAppBar(bool isSmallScreen) {
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
       notchMargin: 8,
@@ -381,45 +386,63 @@ class _AnalyticsState extends State<Analytics> with SingleTickerProviderStateMix
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            IconButton(
-              icon: Icon(
-                Icons.dashboard,
-                color: _selectedIndex == 0 ? primaryColor : Colors.grey,
-              ),
-              onPressed: () {
-                if (_selectedIndex == 0) return;
-                setState(() => _selectedIndex = 0);
-                Navigator.pushReplacementNamed(context, '/admin-dashboard');
-              },
+            _buildNavBarItem(0, Icons.dashboard, 'Dashboard', isSmallScreen),
+            _buildNavBarItem(1, Icons.location_on, 'Destinations', isSmallScreen),
+            _buildNavBarItem(2, Icons.people, 'Users', isSmallScreen),
+            _buildNavBarItem(3, Icons.analytics, 'Analytics', isSmallScreen),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavBarItem(int index, IconData icon, String label, bool isSmall) {
+    bool isSelected = _selectedIndex == index;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedIndex = index;
+        });
+
+        // Handle navigation based on selected index
+        switch (index) {
+          case 0: // Dashboard
+            Navigator.pushReplacementNamed(context, '/admin-dashboard');
+            break;
+          case 1: // Destinations Management
+            Navigator.pushReplacementNamed(context, '/manage-destinations');
+            break;
+          case 2: // Users Management
+            Navigator.pushReplacementNamed(context, '/manage-users');
+            break;
+          case 3: // Analytics - already there
+            break;
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+            horizontal: isSmall ? 8 : 12, vertical: isSmall ? 4 : 6),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? primaryColor : Colors.grey,
+              size: isSmall ? 20 : 24,
             ),
-            IconButton(
-              icon: Icon(
-                Icons.location_on,
-                color: _selectedIndex == 1 ? primaryColor : Colors.grey,
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: isSmall ? 10 : 12,
+                color: isSelected ? primaryColor : Colors.grey,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
-              onPressed: () {
-                if (_selectedIndex == 1) return;
-                setState(() => _selectedIndex = 1);
-                Navigator.pushReplacementNamed(context, '/manage-destinations');
-              },
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.people,
-                color: _selectedIndex == 2 ? primaryColor : Colors.grey,
-              ),
-              onPressed: () {
-                if (_selectedIndex == 2) return;
-                setState(() => _selectedIndex = 2);
-                Navigator.pushReplacementNamed(context, '/manage-users');
-              },
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.analytics,
-                color: _selectedIndex == 3 ? primaryColor : Colors.grey,
-              ),
-              onPressed: () {},
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
