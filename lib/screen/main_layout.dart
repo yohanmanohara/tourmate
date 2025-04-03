@@ -72,7 +72,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   Future<String> _getBotResponse(String userMessage) async {
     try {
-      const String baseUrl = 'https://18bb-35-188-228-58.ngrok-free.app/';
+      const String baseUrl = 'https://aa26-34-48-111-19.ngrok-free.app';
       
       final response = await http.post(
         Uri.parse('$baseUrl/chat'),

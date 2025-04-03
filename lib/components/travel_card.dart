@@ -24,7 +24,7 @@ class DestinationCard extends StatefulWidget {
 }
 
 class _DestinationCardState extends State<DestinationCard> {
-  bool _isExpanded = false;
+  bool _isExpanded = true; // Card will be expanded by default
   bool _showFullDescription = false;
   bool _isSaved = false;
 
@@ -52,16 +52,12 @@ class _DestinationCardState extends State<DestinationCard> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Card content with flexible height
             AspectRatio(
               aspectRatio: _isExpanded ? 4 / 5 : 16 / 9,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Background Image
                   _buildImage(),
-
-                  // Gradient Overlay
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -77,37 +73,23 @@ class _DestinationCardState extends State<DestinationCard> {
                       ),
                     ),
                   ),
-
-                  // Content
                   Padding(
                     padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        // Title and Rating
                         _buildTitleAndRating(
                             textTheme, colorScheme, isSmallScreen),
-
                         SizedBox(height: isSmallScreen ? 4 : 8),
-
-                        // Location
                         _buildLocation(textTheme),
-
                         SizedBox(height: isSmallScreen ? 8 : 12),
-
-                        // Features
                         if (widget.destination.features.isNotEmpty &&
                             (!isSmallScreen || _isExpanded))
                           _buildFeatures(textTheme),
-
                         SizedBox(height: isSmallScreen ? 8 : 12),
-
-                        // Description (expanded only)
                         if (_isExpanded)
                           _buildDescription(textTheme, colorScheme),
-
-                        // Action Buttons
                         Padding(
                           padding: EdgeInsets.only(top: isSmallScreen ? 8 : 12),
                           child: _buildActionButtons(
@@ -116,8 +98,6 @@ class _DestinationCardState extends State<DestinationCard> {
                       ],
                     ),
                   ),
-
-                  // Expand/Collapse Indicator
                   _buildExpandIndicator(),
                 ],
               ),
@@ -160,9 +140,8 @@ class _DestinationCardState extends State<DestinationCard> {
         Expanded(
           child: Text(
             widget.destination.title,
-            style:
-                (isSmallScreen ? textTheme.titleMedium : textTheme.titleLarge)
-                    ?.copyWith(
+            style: (isSmallScreen ? textTheme.titleMedium : textTheme.titleLarge)
+                ?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w700,
             ),
@@ -277,7 +256,6 @@ class _DestinationCardState extends State<DestinationCard> {
                 ? TextOverflow.clip
                 : TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
           GestureDetector(
             onTap: () =>
                 setState(() => _showFullDescription = !_showFullDescription),
@@ -289,7 +267,6 @@ class _DestinationCardState extends State<DestinationCard> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
         ],
       );
     });
@@ -300,7 +277,6 @@ class _DestinationCardState extends State<DestinationCard> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Save button
         IconButton(
           icon: Icon(
             _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
@@ -312,10 +288,8 @@ class _DestinationCardState extends State<DestinationCard> {
             widget.onSavePressed?.call();
           },
           padding: EdgeInsets.zero,
-          constraints: BoxConstraints(),
+          constraints: const BoxConstraints(),
         ),
-
-        // Explore button - now the only main action button
         Expanded(
           child: Align(
             alignment: Alignment.centerRight,
@@ -325,8 +299,8 @@ class _DestinationCardState extends State<DestinationCard> {
                 backgroundColor: Colors.white,
                 foregroundColor: colorScheme.primary,
                 padding: EdgeInsets.symmetric(
-                    horizontal: isSmallScreen ? 12 : 20,
-                    vertical: isSmallScreen ? 8 : 10),
+                    horizontal: isSmallScreen ? 10 : 20,
+                    vertical: isSmallScreen ? 3 : 10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
