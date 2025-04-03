@@ -17,6 +17,7 @@ import './screen/destination_details_user.dart';
 import './screen/preferenceselectionscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import './screen/admin/manage_reviews.dart';
+import './screen/admin/analytics.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const MainLayout(),
         '/admin-dashboard': (context) => const AdminDashboardScreen(),
         '/manage-destinations': (context) => const ManageDestinationsScreen(),
+        '/analytics': (context) => const Analytics(),
         '/manage-users': (context) => const ManageUsersScreen(),
         '/manage-reviews': (context) =>
             const ManageReviewsScreen(),

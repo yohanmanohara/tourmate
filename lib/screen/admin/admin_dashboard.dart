@@ -96,12 +96,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             tooltip: 'Refresh statistics',
             onPressed: _loadStatistics,
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {
-              // Show notifications
-            },
-          ),
+         
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
@@ -367,14 +362,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Action varies based on current screen
-          if (_selectedIndex == 1) {
+          
+         
             Navigator.pushNamed(context, '/edit-destination');
-          } else if (_selectedIndex == 2) {
-            Navigator.pushNamed(context, '/add-user');
-          } else {
-            Navigator.pushNamed(context, '/analytics');
-          }
+        
         },
         backgroundColor: primaryIndigo,
         child: const Icon(Icons.add, color: Colors.white),
