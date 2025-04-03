@@ -26,8 +26,9 @@ class _TravelPageState extends State<TravelPage> {
 
   Future<void> _fetchDestinations() async {
     try {
-      QuerySnapshot snapshot = await _firestore.collection('destinations').get();
-      
+      QuerySnapshot snapshot =
+          await _firestore.collection('destinations').get();
+
       List<Destination> loadedDestinations = [];
       for (var doc in snapshot.docs) {
         loadedDestinations.add(Destination.fromFirestore(doc));
@@ -50,20 +51,34 @@ class _TravelPageState extends State<TravelPage> {
   void _filterDestinations() {
     setState(() {
       filteredDestinations = allDestinations.where((destination) {
-        final matchesSearch = destination.title.toLowerCase().contains(searchQuery.toLowerCase()) || 
-                            destination.location.toLowerCase().contains(searchQuery.toLowerCase());
-        final matchesCategory = selectedCategory == 'All' || 
-                              destination.category.toLowerCase() == selectedCategory.toLowerCase();
+        final matchesSearch = destination.title
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase()) ||
+            destination.location
+                .toLowerCase()
+                .contains(searchQuery.toLowerCase());
+        final matchesCategory = selectedCategory == 'All' ||
+            destination.category.toLowerCase() ==
+                selectedCategory.toLowerCase();
         return matchesSearch && matchesCategory;
       }).toList();
     });
+  }
+
+  // Navigate to destination details screen
+  void _navigateToDetails(String destinationId) {
+    Navigator.pushNamed(
+      context,
+      '/user-destination-details',
+      arguments: destinationId,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -71,7 +86,8 @@ class _TravelPageState extends State<TravelPage> {
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(30),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search destinations...',
@@ -81,9 +97,7 @@ class _TravelPageState extends State<TravelPage> {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: isDarkMode 
-                        ? Colors.grey[800] 
-                        : Colors.grey[100],
+                    fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
                     contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   ),
                   onChanged: (value) {
@@ -96,7 +110,6 @@ class _TravelPageState extends State<TravelPage> {
               ),
             ),
           ),
-          
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverToBoxAdapter(
@@ -116,7 +129,6 @@ class _TravelPageState extends State<TravelPage> {
               ),
             ),
           ),
-          
           if (isLoading)
             SliverFillRemaining(
               child: Center(
@@ -134,6 +146,8 @@ class _TravelPageState extends State<TravelPage> {
                       child: DestinationCard(
                         destination: filteredDestinations[index],
                         initialHeight: 200,
+                        onViewDetails: () =>
+                            _navigateToDetails(filteredDestinations[index].id ?? ''),
                       ),
                     );
                   },
@@ -177,7 +191,7 @@ class _TravelPageState extends State<TravelPage> {
 
   Widget _buildCategoryChip(String category, IconData icon) {
     final isSelected = selectedCategory == category;
-    
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
@@ -198,10 +212,10 @@ class _TravelPageState extends State<TravelPage> {
         },
         selectedColor: Theme.of(context).colorScheme.primaryContainer,
         labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: isSelected 
-              ? Theme.of(context).colorScheme.onPrimaryContainer 
-              : Theme.of(context).colorScheme.onSurface,
-        ),
+              color: isSelected
+                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),

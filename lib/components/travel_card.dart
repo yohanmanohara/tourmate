@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/destination.dart'; 
+import '../models/destination.dart';
 
 class DestinationCard extends StatefulWidget {
   final Destination destination;
@@ -7,6 +7,7 @@ class DestinationCard extends StatefulWidget {
   final double expandedHeight;
   final VoidCallback? onExplorePressed;
   final VoidCallback? onSavePressed;
+  final VoidCallback? onViewDetails; // Add this parameter
 
   const DestinationCard({
     super.key,
@@ -15,6 +16,7 @@ class DestinationCard extends StatefulWidget {
     this.expandedHeight = 320,
     this.onExplorePressed,
     this.onSavePressed,
+    this.onViewDetails, // Add this
   });
 
   @override
@@ -99,6 +101,9 @@ class _DestinationCardState extends State<DestinationCard> {
 
                     // Action Buttons
                     _buildActionButtons(colorScheme, textTheme),
+
+                    // View Details Button (expanded only)
+                    if (_isExpanded) _buildViewDetailsButton(),
                   ],
                 ),
               ),
@@ -129,7 +134,8 @@ class _DestinationCardState extends State<DestinationCard> {
                   ),
                 );
               },
-              errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+              errorBuilder: (context, error, stackTrace) =>
+                  _buildPlaceholderImage(),
             )
           : _buildPlaceholderImage(),
     );
@@ -247,13 +253,13 @@ class _DestinationCardState extends State<DestinationCard> {
             height: 1.5,
           ),
           maxLines: _showFullDescription ? null : 3,
-          overflow: _showFullDescription
-              ? TextOverflow.clip
-              : TextOverflow.ellipsis,
+          overflow:
+              _showFullDescription ? TextOverflow.clip : TextOverflow.ellipsis,
         ),
         const SizedBox(height: 8),
         GestureDetector(
-          onTap: () => setState(() => _showFullDescription = !_showFullDescription),
+          onTap: () =>
+              setState(() => _showFullDescription = !_showFullDescription),
           child: Text(
             _showFullDescription ? 'Show less' : 'Read more',
             style: textTheme.labelMedium?.copyWith(
@@ -292,7 +298,8 @@ class _DestinationCardState extends State<DestinationCard> {
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: colorScheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -307,6 +314,27 @@ class _DestinationCardState extends State<DestinationCard> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildViewDetailsButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: ElevatedButton.icon(
+          onPressed: widget.onViewDetails,
+          icon: const Icon(Icons.visibility),
+          label: const Text('View Details'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.indigo,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
