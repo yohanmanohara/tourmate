@@ -11,7 +11,7 @@ import '../widgets/appbar.dart';
 import 'map.dart';
 import 'screenshot.dart';
 import '../widgets/chat_bubble.dart';
-import '../screen/NewFeatureScreen.dart';
+import 'Currency.dart';
 import '../screen/sos.dart';
 
 class MainLayout extends StatefulWidget {
