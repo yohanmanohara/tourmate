@@ -337,6 +337,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                 ),
               ),
+              
       ),
 
       // Replace existing bottomNavigationBar with our new component

@@ -28,44 +28,21 @@ class _NotificationPageState extends State<NotificationPage> {
       _notifications = [
         {
           'id': '1',
-          'title': 'New Message',
-          'message': 'You have received a new message from John',
+          'title': 'New Locations ',
+          'message': 'We have add new locations around beachside check it out',
           'type': 'message',
           'isRead': false,
           'timestamp': now.subtract(const Duration(minutes: 5)),
         },
         {
           'id': '2',
-          'title': 'Event Reminder',
-          'message': 'Team meeting starts in 15 minutes - Conference Room B',
-          'type': 'event',
-          'isRead': false,
-          'timestamp': now.subtract(const Duration(hours: 2)),
-        },
-        {
-          'id': '3',
           'title': 'Security Alert',
-          'message': 'New login detected from iOS device in San Francisco',
+          'message': 'Your Located area Tempature get maximus plz drink warter',
           'type': 'alert',
           'isRead': true,
           'timestamp': now.subtract(const Duration(days: 1)),
         },
-        {
-          'id': '4',
-          'title': 'System Update',
-          'message': 'Version 2.3.1 available with new features',
-          'type': 'system',
-          'isRead': true,
-          'timestamp': now.subtract(const Duration(days: 3)),
-        },
-        {
-          'id': '5',
-          'title': 'Friend Request',
-          'message': 'Sarah Johnson sent you a connection request',
-          'type': 'social',
-          'isRead': false,
-          'timestamp': now.subtract(const Duration(days: 7)),
-        },
+  
       ];
       _isLoading = false;
     });
