@@ -5,6 +5,7 @@ import '../services/auth_services.dart';
 import '../screen/settings_page.dart';
 import '../screen/profile_page.dart';
 import 'dart:async'; 
+import '../widgets/notification_page.dart';
 
 class BeautifulAppBar extends StatefulWidget implements PreferredSizeWidget {
   final int currentIndex;
@@ -95,7 +96,9 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      automaticallyImplyLeading: false, // This ensures no back button appears
+      automaticallyImplyLeading: false, 
+       iconTheme: const IconThemeData(color: Colors.white),
+      // This ensures no back button appears
       title: Text(
         'TourMate',
         style: const TextStyle(
@@ -110,9 +113,11 @@ class _BeautifulAppBarState extends State<BeautifulAppBar> {
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
           onPressed: widget.onNotificationPressed ?? () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No new notifications')),
-            );
+            
+            Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NotificationPage()),
+        );
           },
         ),
         Text(
