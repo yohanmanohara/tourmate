@@ -122,6 +122,7 @@ class _UserDestinationDetailsScreenState
     }
   }
 
+  // Update the review submission function
   void _submitReview() async {
     if (_rating == 0.0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -145,6 +146,16 @@ class _UserDestinationDetailsScreenState
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
+
+      // Get current user info
+      final currentUser = FirebaseAuth.instance.currentUser;
+      String userName = 'Anonymous';
+      String userId = 'anonymous';
+
+      if (currentUser != null) {
+        userName = currentUser.displayName ?? 'User';
+        userId = currentUser.uid;
+      }
 
       final destinationRef = FirebaseFirestore.instance
           .collection('destinations')
@@ -175,7 +186,8 @@ class _UserDestinationDetailsScreenState
           'review': reviewText,
           'rating': _rating,
           'timestamp': Timestamp.now(),
-          'userName': 'Anonymous',
+          'userName': userName,
+          'userId': userId,
         });
       });
 
@@ -1135,7 +1147,7 @@ class _UserDestinationDetailsScreenState
                           ),
                         ),
                         const SizedBox(height: 12),
-                        StreamBuilder(
+                        StreamBuilder<QuerySnapshot>(
                           stream: FirebaseFirestore.instance
                               .collection('reviews')
                               .where('destinationId',
@@ -1144,13 +1156,42 @@ class _UserDestinationDetailsScreenState
                               .snapshots(),
                           builder:
                               (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                            if (!snapshot.hasData) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
                               return const Center(
-                                  child: CircularProgressIndicator());
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
                             }
-                            final reviews = snapshot.data!.docs;
 
-                            if (reviews.isEmpty) {
+                            if (snapshot.hasError) {
+                              return Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.error_outline,
+                                          size: 48, color: Colors.red[300]),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Error loading reviews: ${snapshot.error}',
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                          fontSize: 16,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
                               return Center(
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),
@@ -1174,12 +1215,15 @@ class _UserDestinationDetailsScreenState
                               );
                             }
 
+                            final reviews = snapshot.data!.docs;
+
                             return ListView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: reviews.length,
                               itemBuilder: (context, index) {
-                                final review = reviews[index];
+                                final reviewData = reviews[index].data()
+                                    as Map<String, dynamic>;
                                 return Card(
                                   margin: const EdgeInsets.only(bottom: 12),
                                   shape: RoundedRectangleBorder(
@@ -1192,11 +1236,37 @@ class _UserDestinationDetailsScreenState
                                           CrossAxisAlignment.start,
                                       children: [
                                         Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            // User name or Anonymous
+                                            Text(
+                                              reviewData['userName'] ??
+                                                  'Anonymous',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                            // Date
+                                            Text(
+                                              _formatTimestamp(
+                                                  reviewData['timestamp']),
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        // Rating stars
+                                        Row(
                                           children: [
                                             RatingBar.builder(
-                                              initialRating: review['rating']
-                                                      ?.toDouble() ??
-                                                  0.0,
+                                              initialRating:
+                                                  (reviewData['rating'] ?? 0.0)
+                                                      .toDouble(),
                                               minRating: 1,
                                               direction: Axis.horizontal,
                                               allowHalfRating: true,
@@ -1212,28 +1282,22 @@ class _UserDestinationDetailsScreenState
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
-                                              review['rating']?.toString() ??
-                                                  '0.0',
+                                              (reviewData['rating'] ?? 0.0)
+                                                  .toString(),
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 8),
+                                        const SizedBox(height: 12),
+                                        // Review text
                                         Text(
-                                          review['review'],
+                                          reviewData['review'] ?? '',
                                           style: TextStyle(
                                             color: Colors.grey[800],
                                             fontSize: 14,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          _formatTimestamp(review['timestamp']),
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
+                                            height: 1.4,
                                           ),
                                         ),
                                       ],
