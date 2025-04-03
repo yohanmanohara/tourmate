@@ -28,21 +28,25 @@ class _NotificationPageState extends State<NotificationPage> {
       _notifications = [
         {
           'id': '1',
+
           'title': 'New Locations ',
           'message': 'We have add new locations around beachside check it out',
+
           'type': 'message',
           'isRead': false,
           'timestamp': now.subtract(const Duration(minutes: 5)),
         },
         {
           'id': '2',
+
           'title': 'Security Alert',
           'message': 'Your Located area Tempature get maximus plz drink warter',
+
           'type': 'alert',
           'isRead': true,
           'timestamp': now.subtract(const Duration(days: 1)),
         },
-  
+
       ];
       _isLoading = false;
     });
