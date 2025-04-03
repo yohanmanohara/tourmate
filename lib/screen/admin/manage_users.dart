@@ -394,7 +394,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 Navigator.pop(context);
 
                 if (newRole != user.role) {
-                  setState(() {
+                  // Update the parent state to show loading indicator
+                  this.setState(() {
                     _isLoading = true;
                   });
 
@@ -402,6 +403,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                     await _firestoreService.updateUserRole(user.uid, newRole);
 
                     if (mounted) {
+                      // Show success message
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('User role updated successfully'),
@@ -409,7 +411,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
-                      setState(() {}); // Refresh the UI
+
+                      // Force rebuild the widget to refresh the user list
+                      this.setState(() {
+                        // This empty setState will trigger a rebuild
+                      });
                     }
                   } catch (e) {
                     if (mounted) {
@@ -423,7 +429,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                     }
                   } finally {
                     if (mounted) {
-                      setState(() {
+                      // Turn off loading indicator
+                      this.setState(() {
                         _isLoading = false;
                       });
                     }
