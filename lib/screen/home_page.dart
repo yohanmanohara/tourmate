@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -59,21 +60,29 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<List<Note>> _fetchUserNotes() async {
-    try {
-      final querySnapshot = await notesCollection
-          .where('userId', isEqualTo: 'current_user_id')
-          .orderBy('date', descending: true)
-          .limit(3)
-          .get();
-      return querySnapshot.docs
-          .map((doc) => Note.fromMap(doc.data() as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      debugPrint('Error fetching notes: $e');
-      return [];
+Future<List<Note>> _fetchUserNotes() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return [];
+    
+    final querySnapshot = await notesCollection
+        .where('userId', isEqualTo: user.uid)
+        .orderBy('date', descending: true)
+        .limit(3)
+        .get();
+        
+    return querySnapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return Note.fromMap(data..['id'] = doc.id);
+    }).toList();
+  } catch (e) {
+    debugPrint('Error fetching notes: $e');
+    if (e is FirebaseException && e.code == 'permission-denied') {
+      debugPrint('Permission denied - check Firestore rules');
     }
+    return [];
   }
+}
 
   void _loadDestinationData() {
     setState(() {
@@ -261,7 +270,7 @@ class _HomePageState extends State<HomePage> {
               title: 'No notes yet',
               content: 'Tap + to create your first travel note',
               color: Colors.grey[200]!,
-              date: 'Now',
+              date: 'Now', userId: '',
             ),
             onEdit: (_) => _createNewNote(context),
             showDeleteButton: false,
@@ -293,7 +302,7 @@ class _HomePageState extends State<HomePage> {
             title: '',
             content: '',
             color: Colors.blue[100]!,
-            date: DateFormat('MMM d').format(DateTime.now()),
+            date: DateFormat('MMM d').format(DateTime.now()), userId: '',
           ),
           isNew: true,
         ),

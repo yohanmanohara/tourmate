@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -24,16 +25,19 @@ class _EditNotePageState extends State<EditNotePage> with SingleTickerProviderSt
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  final FocusNode _titleFocusNode = FocusNode();
+  final FocusNode _contentFocusNode = FocusNode();
 
+  static const double _colorOpacity = 0.4;
   final List<Color> _colorOptions = [
-    Colors.red.withOpacity(0.4),
-    Colors.orange.withOpacity(0.4),
-    Colors.yellow.withOpacity(0.4),
-    Colors.green.withOpacity(0.4),
-    Colors.blue.withOpacity(0.4),
-    Colors.indigo.withOpacity(0.4),
-    Colors.purple.withOpacity(0.4),
-    Colors.grey.withOpacity(0.3),
+    Colors.red.withOpacity(_colorOpacity),
+    Colors.orange.withOpacity(_colorOpacity),
+    Colors.yellow.withOpacity(_colorOpacity),
+    Colors.green.withOpacity(_colorOpacity),
+    Colors.blue.withOpacity(_colorOpacity),
+    Colors.indigo.withOpacity(_colorOpacity),
+    Colors.purple.withOpacity(_colorOpacity),
+    Colors.grey.withOpacity(_colorOpacity - 0.1),
   ];
 
   @override
@@ -41,6 +45,7 @@ class _EditNotePageState extends State<EditNotePage> with SingleTickerProviderSt
     super.initState();
     _initializeControllers();
     _initializeAnimations();
+    _titleFocusNode.requestFocus();
   }
 
   void _initializeControllers() {
@@ -80,6 +85,8 @@ class _EditNotePageState extends State<EditNotePage> with SingleTickerProviderSt
     _titleController.dispose();
     _contentController.dispose();
     _animationController.dispose();
+    _titleFocusNode.dispose();
+    _contentFocusNode.dispose();
     super.dispose();
   }
 
@@ -91,7 +98,10 @@ class _EditNotePageState extends State<EditNotePage> with SingleTickerProviderSt
         return Scaffold(
           backgroundColor: Colors.blue.shade50,
           appBar: _buildAppBar(),
-          body: _buildAnimatedContent(),
+          body: GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: _buildAnimatedContent(),
+          ),
         );
       },
     );
@@ -164,6 +174,7 @@ class _EditNotePageState extends State<EditNotePage> with SingleTickerProviderSt
   Widget _buildTitleField() {
     return TextField(
       controller: _titleController,
+      focusNode: _titleFocusNode,
       decoration: _buildInputDecoration(
         labelText: 'Title',
         hintText: 'Enter note title...',
@@ -175,6 +186,8 @@ class _EditNotePageState extends State<EditNotePage> with SingleTickerProviderSt
         letterSpacing: 0.2,
       ),
       maxLines: 1,
+      textInputAction: TextInputAction.next,
+      onSubmitted: (_) => _contentFocusNode.requestFocus(),
       textCapitalization: TextCapitalization.sentences,
     );
   }
@@ -182,6 +195,7 @@ class _EditNotePageState extends State<EditNotePage> with SingleTickerProviderSt
   Widget _buildContentField() {
     return TextField(
       controller: _contentController,
+      focusNode: _contentFocusNode,
       decoration: _buildInputDecoration(
         labelText: 'Content',
         hintText: 'Write your thoughts here...',
@@ -302,34 +316,49 @@ class _EditNotePageState extends State<EditNotePage> with SingleTickerProviderSt
     });
   }
 
-  Future<void> _saveNote() async {
-    if (_titleController.text.trim().isEmpty) {
-      await HapticFeedback.vibrate();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please enter a title'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-          backgroundColor: Colors.red.shade400,
-          elevation: 4,
-        ),
-      );
-      return;
-    }
+ Future<void> _saveNote() async {
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+  FocusScope.of(context).unfocus();
 
-    final updatedNote = Note(
-      id: widget.note.id,
-      title: _titleController.text,
-      content: _contentController.text,
+  final trimmedTitle = _titleController.text.trim();
+  final trimmedContent = _contentController.text.trim();
+
+  if (trimmedTitle.isEmpty) {
+    await HapticFeedback.vibrate();
+    _showErrorSnackBar('Please enter a title');
+    return;
+  }
+
+  try {
+    final updatedNote = widget.note.copyWith(
+      title: trimmedTitle,
+      content: trimmedContent,
       color: _selectedColor,
       date: DateFormat('MMM d, yyyy').format(DateTime.now()),
+      userId: currentUser?.uid,  // Use the user ID as a string
+      // Preserve all other fields from the original note
     );
 
     if (mounted) {
       Navigator.pop(context, updatedNote);
     }
+  } catch (e) {
+    _showErrorSnackBar('Failed to save note. Please try again.');
+  }
+}
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.all(16),
+        backgroundColor: Colors.red.shade400,
+        elevation: 4,
+      ),
+    );
   }
 }
