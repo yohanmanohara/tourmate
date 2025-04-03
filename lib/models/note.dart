@@ -71,4 +71,6 @@ class Note {
       labels: labels ?? this.labels,
     );
   }
+
 }
+

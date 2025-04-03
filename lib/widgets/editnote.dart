@@ -361,4 +361,6 @@ class _EditNotePageState extends State<EditNotePage> with SingleTickerProviderSt
       ),
     );
   }
+
 }
+
