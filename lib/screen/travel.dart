@@ -78,6 +78,9 @@ class _TravelPageState extends State<TravelPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
+    final horizontalPadding = isTablet ? 24.0 : 16.0;
 
     return Scaffold(
       body: CustomScrollView(
@@ -86,8 +89,10 @@ class _TravelPageState extends State<TravelPage> {
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(30),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 8,
+                ),
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search destinations...',
@@ -111,7 +116,10 @@ class _TravelPageState extends State<TravelPage> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: 8,
+            ),
             sliver: SliverToBoxAdapter(
               child: SizedBox(
                 height: 50,
@@ -136,25 +144,7 @@ class _TravelPageState extends State<TravelPage> {
               ),
             )
           else if (filteredDestinations.isNotEmpty)
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: DestinationCard(
-                        destination: filteredDestinations[index],
-                        initialHeight: 200,
-                        onViewDetails: () =>
-                            _navigateToDetails(filteredDestinations[index].id ?? ''),
-                      ),
-                    );
-                  },
-                  childCount: filteredDestinations.length,
-                ),
-              ),
-            )
+            _buildDestinationGrid(horizontalPadding, isTablet)
           else
             SliverFillRemaining(
               child: Center(
@@ -185,6 +175,53 @@ class _TravelPageState extends State<TravelPage> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDestinationGrid(double horizontalPadding, bool isTablet) {
+    if (isTablet) {
+      return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.5,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              return DestinationCard(
+                destination: filteredDestinations[index],
+                initialHeight: 180,
+                onExplorePressed: () =>
+                    _navigateToDetails(filteredDestinations[index].id ?? ''),
+              );
+            },
+            childCount: filteredDestinations.length,
+          ),
+        ),
+      );
+    }
+
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: DestinationCard(
+                destination: filteredDestinations[index],
+                initialHeight: 200,
+                onExplorePressed: () =>
+                    _navigateToDetails(filteredDestinations[index].id ?? ''),
+              ),
+            );
+          },
+          childCount: filteredDestinations.length,
+        ),
       ),
     );
   }
