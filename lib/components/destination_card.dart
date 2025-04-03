@@ -21,6 +21,7 @@ class DestinationCard extends StatelessWidget {
       width: cardWidth,
       child: Card(
         elevation: 2,
+        color: const Color.fromARGB(255, 193, 193, 230), 
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -282,7 +283,7 @@ Flexible(
       case 'nature':
         return Colors.green.shade600;
       default:
-        return Colors.blueGrey.shade600;
+        return const Color.fromARGB(255, 38, 98, 126);
     }
   }
 

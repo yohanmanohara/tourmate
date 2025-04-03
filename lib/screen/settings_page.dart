@@ -55,6 +55,7 @@ class _SettingsPageState extends State<SettingsPage>
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverAppBar(
+            
             expandedHeight: 120.0,
             floating: false,
             pinned: true,

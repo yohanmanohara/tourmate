@@ -190,10 +190,11 @@ class _CurrencyConverterScreenState extends State<NewFeatureScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+         iconTheme: const IconThemeData(color: Colors.white), 
         title: const Text('Currency Converter',
         style: TextStyle(color: Colors.white,),
         ),
-        backgroundColor: Colors.deepPurpleAccent,
+        backgroundColor: Colors.indigoAccent,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -275,7 +276,8 @@ class _CurrencyConverterScreenState extends State<NewFeatureScreen> {
                   icon: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.deepPurpleAccent,
+                      color: Colors.indigoAccent,
+                     
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.swap_horiz, color: Colors.white),
