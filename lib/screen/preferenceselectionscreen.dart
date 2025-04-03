@@ -17,11 +17,12 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
     'Cultural',
     'Urban',
     'Adventure',
-    'Food',
+
     'Beach',
     'Mountain',
-    'Religious',
-    'Art'
+   
+    
+
   ];
 
   final Set<String> selectedCategories = {};
@@ -149,18 +150,12 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
                     child: CircularProgressIndicator(color: Colors.white))
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // App logo or icon
-                      Align(
-                        alignment: Alignment.topLeft,
-                        child: Image.asset(
-                          'assets/images/tourmate_logo_white.png',
-                          height: 40,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
 
-                      const SizedBox(height: 20),
+                      children: [
+                        // App logo or icon
+                        
+                        const SizedBox(height: 20),
+
 
                       // Title
                       const Text(
@@ -201,6 +196,7 @@ class _PreferenceScreenState extends State<PreferenceScreen> {
                                 .toList(),
                           ),
                         ),
+
                       ),
 
                       // Continue Button

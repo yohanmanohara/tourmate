@@ -73,7 +73,7 @@ class _CurrencyConverterScreenState extends State<NewFeatureScreen> {
 
   // Selected currencies
   String fromCurrency = 'USD';
-  String toCurrency = 'EUR';
+  String toCurrency = 'LKR';
 
   // Controllers for text fields
   final TextEditingController amountController = TextEditingController();
@@ -112,7 +112,7 @@ class _CurrencyConverterScreenState extends State<NewFeatureScreen> {
       'HUF': 300.00,
       'CZK': 22.00,
       'ILS': 3.25,
-    
+      'LKR':298,
       'UZS': 10500.00,
       'KPW': 900.00,
       'IRR': 42000.00,
