@@ -16,6 +16,7 @@ import './screen/admin/manage_users.dart';
 import './screen/destination_details_user.dart';
 import './screen/preferenceselectionscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import './screen/admin/manage_reviews.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,8 @@ class MyApp extends StatelessWidget {
         '/admin-dashboard': (context) => const AdminDashboardScreen(),
         '/manage-destinations': (context) => const ManageDestinationsScreen(),
         '/manage-users': (context) => const ManageUsersScreen(),
+        '/manage-reviews': (context) =>
+            const ManageReviewsScreen(),
         '/edit-destination': (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           return EditDestinationScreen(
